@@ -1,8 +1,6 @@
-# my-lms
+# Modula
 
-> **Working title.** The project name is not final — see [Open decisions](docs/PROJECT_CONTEXT.md#12-open-decisions).
-
-A private, non-commercial Learning Management System built as a portfolio project. It aims to cover the full lifecycle of an online course platform: instructors author courses (modules, lessons, quizzes, assignments), students browse a catalog and enroll (free or paid), work through lessons, take quizzes, submit assignments, rate courses, and earn certificates; admins manage users and categories. It is a single Laravel + Inertia application — **no separate REST/SPA API** — with Laravel 13 on the backend and React 19 + TypeScript on the frontend.
+**Modula** is a private, non-commercial Learning Management System built as a portfolio project. It aims to cover the full lifecycle of an online course platform: instructors author courses (modules, lessons, quizzes, assignments), students browse a catalog and enroll (free or paid), work through lessons, take quizzes, submit assignments, rate courses, and earn certificates; admins manage users and categories. It is a single Laravel + Inertia application — **no separate REST/SPA API** — with Laravel 13 on the backend and React 19 + TypeScript on the frontend.
 
 ## Status
 
@@ -45,8 +43,8 @@ Early development. The repo is currently the [`laravel/react-starter-kit`](https
 ## Getting started
 
 ```bash
-git clone <repo-url> my-lms
-cd my-lms
+git clone <repo-url> modula
+cd modula
 
 composer install
 bun install
@@ -58,7 +56,7 @@ php artisan key:generate
 
 ### Database
 
-This project uses **PostgreSQL**. `.env.example` ships with `DB_CONNECTION=pgsql`; after copying it to `.env`, set your local credentials:
+Modula uses **PostgreSQL**. The databases are named `my-lms` / `my-lms_testing` (the project's former working title — kept to avoid a churn of infra renames). `.env.example` ships with `DB_CONNECTION=pgsql`; after copying it to `.env`, set your local credentials:
 
 ```dotenv
 DB_CONNECTION=pgsql

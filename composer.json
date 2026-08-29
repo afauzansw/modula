@@ -1,11 +1,11 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/react-starter-kit",
+    "name": "afauzansw/modula",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Modula — a personal learning management system.",
     "keywords": [
         "laravel",
-        "framework"
+        "lms"
     ],
     "license": "MIT",
     "require": {

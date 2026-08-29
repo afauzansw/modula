@@ -1,6 +1,6 @@
 # Project Context
 
-Domain and business-logic reference for **my-lms**. Read this before starting a task so you understand *why* the system is shaped the way it is — not just what the stack is.
+Domain and business-logic reference for **Modula**, a personal learning-management-system project. Read this before starting a task so you understand *why* the system is shaped the way it is — not just what the stack is.
 
 Coding conventions (Laravel / Inertia / testing patterns, file structure, naming) are governed by `CLAUDE.md` and the Laravel Boost guidelines and skills. **This document is only about the domain.**
 
@@ -8,7 +8,7 @@ Coding conventions (Laravel / Inertia / testing patterns, file structure, naming
 
 ## 1. What this is
 
-- A **Learning Management System** — an online course platform.
+- **Modula** — a **Learning Management System**, an online course platform.
 - **Private and non-commercial.** A personal portfolio project by Fauzan (senior Laravel developer moving toward fullstack / frontend). It has no customers and is not a product.
 - **Not deployed — runs locally only.** There is no staging or production environment, no live URL, and no deploy pipeline. The project runs on the developer's machine, for learning and portfolio purposes.
 - **Consequence for decisions:** favor clean architecture and modern, demonstrable patterns over production hardening, horizontal scale, or monetization. **Local-first is an acceptable simplification throughout the project:**
@@ -196,12 +196,12 @@ Migrations live in `database/migrations/` and have been applied to `my-lms` (see
 
 Flag these if a task touches them. **Do not silently pick one.**
 
-1. **Project name** — not chosen. Repo / working name is `my-lms`.
-2. **Dual roles** — can one user hold `student` and `instructor` simultaneously? Affects post-login redirect logic and whether a role-switcher UI is needed.
-3. **Certificate placeholder syntax** — the exact merge-field tokens and the instructor-facing documentation for them must be fixed before the certificate generator is built.
-4. **Payment gateway scope** — sandbox / test-mode only (Midtrans / Xendit), consistent with the no-deployment and non-commercial scope (§1). Real integration only if explicitly revisited.
-5. **Quiz `passing_score` placement** — the schema puts `passing_score` on `quizzes` (quiz-level, default 70); §7's prose still describes it as question-level and should be reconciled.
-6. **Local PostgreSQL provisioning** — the app talks to a local Postgres 17.x on `127.0.0.1:5432`, but there is no agreed setup for fresh clones (native install vs Docker vs Herd vs Laragon). Pick one and document it in the README.
+1. **Dual roles** — can one user hold `student` and `instructor` simultaneously? Affects post-login redirect logic and whether a role-switcher UI is needed.
+2. **Certificate placeholder syntax** — the exact merge-field tokens and the instructor-facing documentation for them must be fixed before the certificate generator is built.
+3. **Payment gateway scope** — sandbox / test-mode only (Midtrans / Xendit), consistent with the no-deployment and non-commercial scope (§1). Real integration only if explicitly revisited.
+4. **Quiz `passing_score` placement** — the schema puts `passing_score` on `quizzes` (quiz-level, default 70); §7's prose still describes it as question-level and should be reconciled.
+5. **Local PostgreSQL provisioning** — the app talks to a local Postgres 17.x on `127.0.0.1:5432`, but there is no agreed setup for fresh clones (native install vs Docker vs Herd vs Laragon). Pick one and document it in the README.
+6. **Database rename** — the databases are still `my-lms` / `my-lms_testing` from the old working title. Renaming them to `modula` is deferred (touches `.env`, `.env.example`, `phpunit.xml`, and needs the databases recreated); do it only if the mismatch becomes annoying.
 
 ## 13. Conventions
 
