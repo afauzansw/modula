@@ -34,17 +34,15 @@ _(Unnumbered so the existing section anchors — e.g. [Open decisions](#12-open-
 
 - **Database: PostgreSQL** (not MySQL). Earlier drafts of this doc assumed MySQL; §6 and §11 have been corrected.
   - `config/database.php`'s default connection and `DB_CONNECTION` in `.env` / `.env.example` are `pgsql`.
-  - The test suite also runs on PostgreSQL — `phpunit.xml` points at a `my-lms_testing` database, not SQLite.
+  - Locally — including `php artisan test` — everything runs on PostgreSQL; `phpunit.xml` points at a `my-lms_testing` database.
+  - **CI is the exception:** the `tests` workflow provisions no database (Modula is never deployed), so it overrides `DB_CONNECTION=sqlite` / `DB_DATABASE=:memory:` for the run. The full suite passes on SQLite too — the migrations and the `orders` partial unique index both work there.
   - The app talks to a local PostgreSQL 17.x instance on `127.0.0.1:5432`. How a fresh setup should provision Postgres (native install / Docker / Herd / Laragon) is not pinned — see [Open decisions](#12-open-decisions).
 - **JavaScript package manager & runtime: Bun** (not npm).
-  - Use `bun install`, `bun run dev`, `bun run build`.
+  - Use `bun install`, `bun run dev`, `bun run build`. `bun.lock` is committed; `package-lock.json` has been removed.
   - Node.js may still matter as a *compatibility target* for Vite and related tooling, but dependency installation and script execution go through Bun.
-  - `php artisan dev` (what `composer dev` runs) auto-detects the package manager from the lock file — `bun.lockb` → Bun, `package-lock.json` → npm. So once `bun install` has run, **delete `package-lock.json`** or it will keep choosing npm.
-  - **Follow-ups (not done in this pass):**
-    - `.github/workflows/tests.yml` still has a "Setup Node" step and no Bun setup. It needs `oven-sh/setup-bun` — replacing the Node step, or kept alongside it if something specific still requires Node.
-    - `composer.json` scripts `setup` and `ci:check` hard-code `npm install` / `npm run …`; switch them to `bun`.
-    - Remove `package-lock.json` after the first `bun install` (see above).
-- **No deployment.** See §1. CI is checks-only; there is no deploy target and no production environment to design for.
+  - `php artisan dev` (what `composer dev` runs) auto-detects the package manager from the lock file (`bun.lock` → Bun).
+  - `composer.json`'s `setup` and `ci:check` scripts, and `.github/workflows/tests.yml`, all use Bun.
+- **No deployment.** See §1. The `tests` workflow (`.github/workflows/tests.yml`) is checks-only — `composer install`, `bun install` + `bun run build`, lint (ESLint / Prettier / Pint), static analysis (tsc / PHPStan), then `php artisan test`. No database service, no deploy step; keep it that way unless explicitly revisited.
 
 ## Architecture
 

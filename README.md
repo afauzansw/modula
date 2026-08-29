@@ -48,7 +48,6 @@ cd modula
 
 composer install
 bun install
-rm -f package-lock.json   # so `php artisan dev` and tooling detect Bun, not npm
 
 cp .env.example .env
 php artisan key:generate
