@@ -24,7 +24,8 @@ As of the last update to this document:
 
 - The repo is the `laravel/react-starter-kit` scaffold + this documentation.
 - **Built:** authentication via Laravel Fortify (login, registration, password reset, email verification, 2FA/TOTP, passkeys); settings pages; Spatie `laravel-permission` (installed, `User` has `HasRoles`); the **16 domain migrations** (§10) applied to `my-lms`; an **Eloquent model + factory for every domain table**, with relationships and casts wired; and a `DemoContentSeeder` (run by `DatabaseSeeder`) that builds a sample course graph and the three roles.
-- **Not yet built:** a non-demo role/permission seeder, the `/instructor` and `/admin` areas, controllers / form requests / policies, and all feature behaviour (checkout, quiz grading, the `progress_percent` rollup, certificate generation, the rating eligibility/edit/snapshot rules). Models and schema exist; the application logic does not.
+- **Built:** the layered architecture's foundation — `BaseRepository` + `AuthRepository` (Phase 1, see [Architecture](#architecture)) with the `otp_codes` table for the OTP password-change flow.
+- **Not yet built:** a non-demo role/permission seeder, the `/instructor` and `/admin` areas, controllers / form requests / policies, the domain repositories and the whole Services layer (Architecture → "Planned"), and all feature behaviour (checkout, quiz grading, the `progress_percent` rollup, certificate generation, the rating eligibility/edit/snapshot rules). Models and schema exist; the application logic does not.
 - Treat sections 3–11 as the **target design for behaviour**, even though the tables and models now exist.
 
 ## Environment and tooling
@@ -44,6 +45,96 @@ _(Unnumbered so the existing section anchors — e.g. [Open decisions](#12-open-
     - `composer.json` scripts `setup` and `ci:check` hard-code `npm install` / `npm run …`; switch them to `bun`.
     - Remove `package-lock.json` after the first `bun install` (see above).
 - **No deployment.** See §1. CI is checks-only; there is no deploy target and no production environment to design for.
+
+## Architecture
+
+Modula uses a layered architecture. **Controllers stay thin** — no Eloquent
+queries (`Model::query()`, `Model::where(...)`, `->with(...)`, …) and no
+third-party SDK calls inside a controller. A controller validates input,
+delegates to a repository or a service, and returns a response. Two layers hold
+the logic controllers must not:
+
+| Layer | Path | Owns | Rule of thumb |
+| --- | --- | --- | --- |
+| **Repositories** | `app/Repositories/` | All data access for the app's own models — Eloquent queries, filtering, joins, aggregations. | *"Give me data about X."* |
+| **Services** | `app/Services/` | Integration with external systems and multi-step business processes (payment gateway calls, certificate `.docx` merge, notifications, orchestration). A service may use one or more repositories internally. | *"Talk to an external system"* / *"perform a multi-step action."* |
+
+Interfaces live in `Contracts/`, Eloquent implementations in `Eloquent/`.
+`RepositoryServiceProvider` (registered in `bootstrap/providers.php`) binds each
+interface to its concrete class via the `$bindings` array; controllers and
+services constructor-inject the **interface**, never the implementation.
+
+### `BaseRepository` (`app/Repositories/Eloquent/BaseRepository.php`)
+
+`abstract`, implements `BaseRepositoryInterface`. Every Eloquent repository
+extends it and gets, for free:
+
+- **`all(array $filters = [], int $perPage = 15)`** — a listing built through
+  `Spatie\QueryBuilder`. Each concrete repository declares protected
+  `$allowedFilters` / `$allowedSorts` / `$allowedIncludes`, and every listing
+  endpoint then supports query-string filtering/sorting/pagination out of the
+  box, e.g. `?filter[status]=published&sort=-created_at&page=2&include=modules`.
+  The `$filters` argument adds forced constraints on top (equality, or `whereIn`
+  for array values).
+- **`find` / `findOrFail` / `create`**.
+- **`update(Model, array)`** and **`updateWhere(array $conditions, array $data)`**
+  — both wrapped in `DB::transaction`. `updateWhere` conditions accept
+  `['col' => $val]` (equality), `['col' => [$a, $b]]` (`whereIn`), and
+  `[fn (Builder $q) => …]` (arbitrary), mixed freely; it returns the affected
+  row count.
+- **`bulkUpdate(array $ids, array $data)`** and **`bulkDelete(array $ids)`** —
+  one query each, wrapped in `DB::transaction`, returning the affected row count.
+  `bulkUpdate` is the intended path for batch status changes.
+
+`BaseRepository` / `BaseRepositoryInterface` are **never bound directly** — only
+concrete subclasses are.
+
+### `AuthRepository` — the proving ground + the OTP password-change flow
+
+`AuthRepositoryInterface` → `EloquentAuthRepository` (extends `BaseRepository`).
+Standalone (it does not extend `BaseRepositoryInterface`) — a thin, data-oriented
+wrapper over Laravel's auth state, not CRUD on a domain entity:
+
+- `login()` / `register()` wrap `Auth::attempt()` / `Hash::make()` (the `User`
+  model's `hashed` cast is idempotent, so hashing here does not double-hash).
+- `profile(int $userId)`.
+- **OTP-gated password change:** `sendPasswordChangeOtp()` writes a row to the
+  `otp_codes` table (`user_id` FK cascade, `code`, `expires_at`, `used_at`,
+  indexed on `(user_id, code)`) and dispatches
+  `PasswordChangeOtpNotification`. **This is the one place a repository triggers
+  an email** — and it still goes through a Notification, not an inline
+  `Mail::send()`, so templating and transport stay swappable.
+  `verifyOtpAndChangePassword()` checks the code matches, is unexpired and
+  unused (all inside `DB::transaction` with `lockForUpdate`), sets the new
+  hashed password, and stamps `used_at` so the code cannot be replayed. A
+  wrong / expired / used code returns `false` and changes nothing.
+
+`AuthRepository` is **fully implemented and tested** (`tests/Feature/Repositories/`)
+— it is the reference every Phase 2 repository copies.
+
+### Planned, not yet implemented
+
+Phase 2 is designed but not built. It follows the exact `EloquentAuthRepository`
+pattern (extend `BaseRepository`, declare `$model` + allowed filters/sorts, add
+entity-specific methods):
+
+- **Domain repositories** for every §10 table — `Course`, `Module`, `Lesson`,
+  `Enrollment`, `LessonProgress`, `Order`, `Quiz`, `QuizAttempt`, `Assignment`,
+  `Submission`, `Rating`, `Certificate` — each `*RepositoryInterface` *extends*
+  `BaseRepositoryInterface` and adds only entity-specific queries (e.g.
+  `OrderRepositoryInterface::findActiveOrderForCourse`,
+  `LessonProgressRepositoryInterface::markCompleted`).
+- **Services layer** (`app/Services/`):
+  - `Payment/` — `PaymentGatewayInterface` (`charge`, `verifyWebhookSignature`,
+    `parseWebhookPayload`) so Midtrans/Xendit is swappable without touching
+    `OrderService` or controllers; `MidtransPaymentService`; `OrderService`
+    (create order, enforce the one-active-order rule of §6, react to `OrderPaid`).
+  - `Certificate/CertificateGenerationService` — merges the course's `.docx`
+    template and issues the PDF + `Certificate` record (§9).
+  - `Enrollment/EnrollmentService` — free-course direct enroll, or enroll on
+    `OrderPaid` (§6).
+  - `Progress/ProgressCalculationService` — recomputes `Enrollment.progress_percent`
+    from `LessonProgress` rows (§5).
 
 ## 3. Roles and application areas
 
@@ -179,6 +270,8 @@ Migrations live in `database/migrations/` and have been applied to `my-lms` (see
 **Domain tables (16):** `categories`, `courses`, `modules`, `lessons`, `enrollments`, `lesson_progress`, `orders`, `payments`, `quizzes`, `questions`, `options`, `quiz_attempts`, `assignments`, `submissions`, `ratings`, `certificates`.
 
 **Roles / permissions:** the five Spatie `laravel-permission` tables (`roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions`). **There is no `role` column on `users`** — role checks go through the `HasRoles` trait (`$user->hasRole('instructor')`, `$user->assignRole('student')`, …).
+
+**Auth infrastructure:** `otp_codes` (`user_id` FK cascade, `code`, `expires_at`, `used_at`, indexed on `(user_id, code)`) backs the OTP password-change flow — see [Architecture](#architecture).
 
 ## 11. Architectural decisions & rationale (quick reference)
 
