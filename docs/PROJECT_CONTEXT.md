@@ -23,9 +23,10 @@ Coding conventions (Laravel / Inertia / testing patterns, file structure, naming
 As of the last update to this document:
 
 - The repo is the `laravel/react-starter-kit` scaffold + this documentation.
-- **Built:** authentication via Laravel Fortify (login, registration, password reset, email verification, 2FA/TOTP, passkeys); settings pages; Spatie `laravel-permission` (installed, `User` has `HasRoles`); the **16 domain migrations** (§10) applied to `my-lms`; an **Eloquent model + factory for every domain table**, with relationships and casts wired; and a `DemoContentSeeder` (run by `DatabaseSeeder`) that builds a sample course graph and the three roles.
-- **Built:** the layered architecture's foundation — `BaseRepository` + `AuthRepository` (Phase 1, see [Architecture](#architecture)) with the `otp_codes` table for the OTP password-change flow.
-- **Not yet built:** a non-demo role/permission seeder, the `/instructor` and `/admin` areas, controllers / form requests / policies, the domain repositories and the whole Services layer (Architecture → "Planned"), and all feature behaviour (checkout, quiz grading, the `progress_percent` rollup, certificate generation, the rating eligibility/edit/snapshot rules). Models and schema exist; the application logic does not.
+- **Built:** authentication via Laravel Fortify (login, registration, password reset, email verification, 2FA/TOTP, passkeys); settings pages; Spatie `laravel-permission` (installed, `User` has `HasRoles`); the **16 domain migrations** (§10) applied to `my-lms`; an **Eloquent model + factory for every domain table**, with relationships and casts wired; and a set of seeders (run in order by `DatabaseSeeder` — see [Seeders](#seeders)) that build a sample course graph, demo accounts, and the three roles.
+- **Built:** the layered architecture's foundation — `BaseRepository` + `AuthRepository` (Phase 1) with the `otp_codes` table; and **role & permission management**, now with an HTTP layer — `AdminPermission` / `SystemRole` catalogues, `RolePermissionSeeder`, `RoleRepository`, the `is_system` role flag, and `Admin\RoleController` (`/admin/roles` CRUD, gated by the `admin.roles` permission). See [Architecture](#architecture).
+- **Built:** the three area shells and their entry points — `/admin` and `/instructor` each redirect to their own `dashboard` route (`/admin/dashboard` behind the `admin.dashboard` permission, `/instructor/dashboard` behind the `instructor` role); Student's area stays at the existing `/dashboard` (no `/student` prefix — see §3). Each area has its own sidebar + persistent layout (`AdminLayout`, `InstructorLayout`); dashboard pages are placeholder content only, no widgets yet.
+- **Not yet built:** everything inside those dashboards, controllers / form requests / policies for any other admin/instructor resource, the domain repositories and the whole Services layer (Architecture → "Planned"), and all feature behaviour (checkout, quiz grading, the `progress_percent` rollup, certificate generation, the rating eligibility/edit/snapshot rules). Models and schema exist; most of the application logic does not.
 - Treat sections 3–11 as the **target design for behaviour**, even though the tables and models now exist.
 
 ## Environment and tooling
@@ -110,11 +111,82 @@ wrapper over Laravel's auth state, not CRUD on a domain entity:
 `AuthRepository` is **fully implemented and tested** (`tests/Feature/Repositories/`)
 — it is the reference every Phase 2 repository copies.
 
+### Role & permission management (built — first Phase 2 slice, data layer only)
+
+- **`App\Enums\AdminPermission`** — the canonical, code-defined permission
+  catalogue: one case per admin-dashboard menu (`admin.users`, `admin.roles`,
+  `admin.orders`, …). Admins never create permissions.
+- **`App\Enums\SystemRole`** — the three built-in roles (`admin`, `instructor`,
+  `student`). Their names are reserved.
+- **`App\Models\Role`** extends Spatie's Role and adds an `is_system` boolean
+  (new `add_is_system_to_roles_table` migration). `config/permission.php` points
+  `models.role` at it.
+- **`RolePermissionSeeder`** (run first by `DatabaseSeeder` — see [Seeders](#seeders))
+  — idempotently syncs the catalogue into the `permissions`
+  table, prunes stale `admin.*` permissions, and upserts the three roles with
+  `is_system = true`: `admin` gets every permission, `instructor` / `student`
+  get none. It never touches admin-created custom roles.
+- **`RoleRepository`** (`RoleRepositoryInterface` extends
+  `BaseRepositoryInterface`) — `createCustomRole` / `updateCustomRole` /
+  `deleteCustomRole` for admin-defined roles holding a subset of the catalogue;
+  every write throws `SystemRoleException` for a system role (and `bulkDelete`
+  is overridden to skip them). `all()` supports
+  `?filter[is_system]=0&include=permissions`.
+- **Not in this slice:** any HTTP layer — `/admin` routes, controllers,
+  policies, permission middleware, and exposing permissions to the frontend are
+  a later slice. There is also no `Gate::before` super-admin bypass yet; `admin`
+  simply holds every permission.
+
+### Seeders
+
+`DatabaseSeeder` (`database/seeders/DatabaseSeeder.php`) calls the others in
+this fixed order — each later seeder depends on data the earlier ones created:
+
+1. `RolePermissionSeeder` — permission catalogue + the three system roles (see above).
+2. `UserSeeder` — the demo accounts (`test@example.com`, `instructor@example.com`,
+   `student@example.com`, `student2@example.com`, `admin@example.com`, all
+   password `password`), role-assigned via `syncRoles()`.
+3. `CategorySeeder` — the two demo categories.
+4. `CourseSeeder` — the two demo courses (one free, one paid), owned by the
+   demo instructor.
+5. `ModuleSeeder` — each course's content tree: modules, lessons (video/text/
+   quiz/assignment), and the `Quiz`/`Question`/`Option`/`Assignment` rows they
+   carry.
+6. `UserEnrollmentSeeder` — a student's course journey: `Enrollment` +
+   `LessonProgress` + the paid-checkout trail (`Order` + `Payment`) + a
+   `QuizAttempt` + a graded `Submission` + a `Certificate`.
+7. `RatingSeeder` — one `Rating` per enrolled demo student, reading each
+   enrollment's resulting `progress_percent` / `last_lesson_id` for the
+   `*_at_review` snapshot fields (§8).
+
+**Naming/grouping convention** — one seeder per model, *except* where models
+are structurally nested and only ever created together, which get merged into
+one seeder named after the parent concept:
+
+- `ModuleSeeder` bundles `Module` with everything that only exists relative to
+  it (`Lesson`, and the `Quiz`/`Question`/`Option`/`Assignment` rows a lesson
+  carries) — a `Lesson` can't be seeded without a `Module`, a `Quiz` can't be
+  seeded without a quiz-type `Lesson`, and so on.
+- `UserEnrollmentSeeder` bundles `Enrollment` with the rest of "a student's
+  journey through a course" (`LessonProgress`, `Order`, `Payment`,
+  `QuizAttempt`, `Submission`, `Certificate`) for the same reason.
+- `Rating` is deliberately **not** in that bundle — it only reads the
+  enrollment's final state (for the snapshot fields), so it's seeded on its
+  own, after `UserEnrollmentSeeder`.
+
+Every seeder is idempotent (guards on its own table already having data, or
+`firstOrCreate`/`firstOrFail` for account lookups) so the whole chain — or any
+individual seeder — is safe to re-run, and safe to seed standalone in tests
+(each seeder just assumes its dependencies already ran; it doesn't re-call them
+itself). `RolePermissionSeederTest` and `RoleRepositoryTest` seed
+`RolePermissionSeeder` alone; `DatabaseSeederTest` seeds the full chain via
+`$this->seed()`.
+
 ### Planned, not yet implemented
 
-Phase 2 is designed but not built. It follows the exact `EloquentAuthRepository`
-pattern (extend `BaseRepository`, declare `$model` + allowed filters/sorts, add
-entity-specific methods):
+The rest of Phase 2 is designed but not built. It follows the exact
+`EloquentAuthRepository` pattern (extend `BaseRepository`, declare `$model` +
+allowed filters/sorts, add entity-specific methods):
 
 - **Domain repositories** for every §10 table — `Course`, `Module`, `Lesson`,
   `Enrollment`, `LessonProgress`, `Order`, `Quiz`, `QuizAttempt`, `Assignment`,
@@ -136,17 +208,23 @@ entity-specific methods):
 
 ## 3. Roles and application areas
 
-Three roles: `admin`, `instructor`, `student`, managed with Spatie `laravel-permission` — `User` uses the `HasRoles` trait, and there is **no `role` column** on `users`.
+Roles are managed with Spatie `laravel-permission` — `User` uses the `HasRoles` trait, and there is **no `role` column** on `users`.
+
+- **`admin`, `instructor`, `student`** are **system roles** (`roles.is_system = true`): they can't be renamed or deleted, and their names are reserved (`App\Enums\SystemRole`).
+- Permissions are **one per admin-dashboard menu** (`App\Enums\AdminPermission` — `admin.users`, `admin.roles`, …), code-defined and not admin-editable. `admin` holds all of them; `instructor` / `student` hold none.
+- An admin can create **custom roles** holding any subset of that catalogue — "sub-admin" roles with less access than `admin`. Managed through `RoleRepository`, exposed at `/admin/roles` via `Admin\RoleController` (see [Architecture](#architecture)).
 
 | Area | Path | Default for | Layout | Purpose |
 | --- | --- | --- | --- | --- |
-| Student | `/` | students (authenticated landing) | `StudentLayout` | Browse catalog, consume courses, take quizzes, submit assignments, rate courses |
-| Instructor | `/instructor` | instructors | `InstructorLayout` | Author courses / modules / lessons, build quizzes & questions, grade submissions, view student progress |
-| Admin | `/admin` | admins | `AdminLayout` | User management, categories, platform-wide oversight |
+| Student | `/dashboard` | students (authenticated landing) | `StudentLayout` (not yet built — student pages currently render under the starter kit's generic `AppLayout`) | Browse catalog, consume courses, take quizzes, submit assignments, rate courses |
+| Instructor | `/instructor` (redirects to `/instructor/dashboard`) | instructors | `InstructorLayout` | Author courses / modules / lessons, build quizzes & questions, grade submissions, view student progress |
+| Admin | `/admin` (redirects to `/admin/dashboard`) | admins | `AdminLayout` | User management, categories, platform-wide oversight |
 
 **Why three separate Inertia layouts** instead of one shared layout with role conditionals: instructor and admin surfaces are authoring-heavy (forms, tables, builders); the student surface is consumption-heavy (reading, video, progress tracking). The UX diverges enough that separate layouts are cleaner than branching one.
 
-**Post-login redirect** is role-dependent (student → `/`, instructor → `/instructor`, admin → `/admin`). The precise rule depends on the dual-role decision — see [Open decisions](#12-open-decisions).
+**Built:** each area's dashboard is a placeholder page reachable at `{area}/dashboard`, with `/admin` and `/instructor` redirecting there (`Route::redirect`). `/instructor/dashboard` is gated by the `instructor` role (Spatie's `role:` middleware); `/admin/dashboard` by the `admin.dashboard` permission — both registered as middleware aliases in `bootstrap/app.php`. Student intentionally kept its existing `/dashboard` path rather than gaining a `/student` prefix (see §12.1 — this doesn't resolve the dual-role/post-login-redirect question below, it only gives each area a real landing page to redirect to).
+
+**Post-login redirect** is role-dependent (student → `/dashboard`, instructor → `/instructor`, admin → `/admin`) but **not yet implemented** — login still lands everyone on `/dashboard` regardless of role. The precise rule depends on the dual-role decision — see [Open decisions](#12-open-decisions).
 
 ## 4. Course structure
 
@@ -267,7 +345,7 @@ Migrations live in `database/migrations/` and have been applied to `my-lms` (see
 
 **Domain tables (16):** `categories`, `courses`, `modules`, `lessons`, `enrollments`, `lesson_progress`, `orders`, `payments`, `quizzes`, `questions`, `options`, `quiz_attempts`, `assignments`, `submissions`, `ratings`, `certificates`.
 
-**Roles / permissions:** the five Spatie `laravel-permission` tables (`roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions`). **There is no `role` column on `users`** — role checks go through the `HasRoles` trait (`$user->hasRole('instructor')`, `$user->assignRole('student')`, …).
+**Roles / permissions:** the five Spatie `laravel-permission` tables (`roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions`); `roles` has an added `is_system` boolean (see §3 / [Architecture](#architecture)). **There is no `role` column on `users`** — role checks go through the `HasRoles` trait (`$user->hasRole('instructor')`, `$user->assignRole('student')`, …).
 
 **Auth infrastructure:** `otp_codes` (`user_id` FK cascade, `code`, `expires_at`, `used_at`, indexed on `(user_id, code)`) backs the OTP password-change flow — see [Architecture](#architecture).
 

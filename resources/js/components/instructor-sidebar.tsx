@@ -1,5 +1,5 @@
-import { Link, usePage } from '@inertiajs/react';
-import { GraduationCap, LayoutGrid, ShieldCheck } from 'lucide-react';
+import { Link } from '@inertiajs/react';
+import { LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -12,38 +12,18 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import { dashboard as adminDashboard } from '@/routes/admin';
-import { dashboard as instructorDashboard } from '@/routes/instructor';
-import type { Auth, NavItem } from '@/types';
+import { dashboard } from '@/routes/instructor';
+import type { NavItem } from '@/types';
 
-export function AppSidebar() {
-    const { auth } = usePage<{ auth: Auth }>().props;
+const mainNavItems: NavItem[] = [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+        icon: LayoutGrid,
+    },
+];
 
-    const mainNavItems: NavItem[] = [
-        {
-            title: 'Dashboard',
-            href: dashboard(),
-            icon: LayoutGrid,
-        },
-    ];
-
-    if (auth.permissions.includes('admin.dashboard')) {
-        mainNavItems.push({
-            title: 'Admin',
-            href: adminDashboard(),
-            icon: ShieldCheck,
-        });
-    }
-
-    if (auth.roles.includes('instructor')) {
-        mainNavItems.push({
-            title: 'Instructor',
-            href: instructorDashboard(),
-            icon: GraduationCap,
-        });
-    }
-
+export function InstructorSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
