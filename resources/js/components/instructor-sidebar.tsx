@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { LayoutGrid } from 'lucide-react';
+import { BookOpen, LayoutGrid, ReceiptText } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -13,6 +13,8 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes/instructor';
+import { index as coursesIndex } from '@/routes/instructor/courses';
+import { index as ordersIndex } from '@/routes/instructor/orders';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -20,6 +22,16 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Courses',
+        href: coursesIndex(),
+        icon: BookOpen,
+    },
+    {
+        title: 'Course Orders',
+        href: ordersIndex(),
+        icon: ReceiptText,
     },
 ];
 
