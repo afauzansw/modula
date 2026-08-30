@@ -4,14 +4,24 @@ use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Order;
+use App\Models\Rating;
+use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\DemoContentSeeder;
-use Spatie\Permission\Models\Role;
 
-beforeEach(fn () => $this->seed(DemoContentSeeder::class));
+beforeEach(fn () => $this->seed());
 
-test('it creates the three roles', function () {
-    expect(Role::pluck('name')->sort()->values()->all())->toBe(['admin', 'instructor', 'student']);
+test('it seeds the three protected system roles', function () {
+    $roles = Role::query()->orderBy('name')->get();
+
+    expect($roles->pluck('name')->all())->toBe(['admin', 'instructor', 'student'])
+        ->and($roles->every(fn (Role $role) => $role->is_system))->toBeTrue();
+});
+
+test('it seeds the demo accounts with the right roles', function () {
+    expect(User::count())->toBe(5)
+        ->and(User::role('instructor')->count())->toBe(1)
+        ->and(User::role('student')->count())->toBe(2)
+        ->and(User::role('admin')->count())->toBe(1);
 });
 
 test('it builds a free and a paid published course owned by the instructor', function () {
@@ -46,11 +56,28 @@ test('the completed student has a 100% enrollment, a paid order and a certificat
         ->and(Certificate::query()->where('user_id', $enrollment->user_id)->where('course_id', $course->id)->exists())->toBeTrue();
 });
 
-test('running the seeder twice does not duplicate course content', function () {
-    $courseCount = Course::count();
+test('each enrolled student has a rating snapshotting their enrollment progress', function () {
+    expect(Rating::count())->toBe(2);
 
-    $this->seed(DemoContentSeeder::class);
+    Rating::all()->each(function (Rating $rating) {
+        $enrollment = Enrollment::query()
+            ->where('user_id', $rating->user_id)
+            ->where('course_id', $rating->course_id)
+            ->sole();
+
+        expect($rating->progress_percent_at_review)->toBe($enrollment->progress_percent)
+            ->and($rating->last_lesson_id_at_review)->toBe($enrollment->last_lesson_id);
+    });
+});
+
+test('running the seeder twice does not duplicate anything', function () {
+    $courseCount = Course::count();
+    $userCount = User::count();
+    $ratingCount = Rating::count();
+
+    $this->seed();
 
     expect(Course::count())->toBe($courseCount)
-        ->and(User::count())->toBe(4);
+        ->and(User::count())->toBe($userCount)
+        ->and(Rating::count())->toBe($ratingCount);
 });
