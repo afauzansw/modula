@@ -1,89 +1,82 @@
 import { Link } from '@inertiajs/react';
-import { ChevronRight } from 'lucide-react';
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarMenuSub,
-    SidebarMenuSubButton,
-    SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/hooks/use-current-url';
-import type { NavItem } from '@/types';
+import type { NavItem, NavLeafItem } from '@/types';
 
-function NavMainItem({ item }: { item: NavItem }) {
-    const { isCurrentUrl } = useCurrentUrl();
+type Section = {
+    label: string | null;
+    items: NavLeafItem[];
+};
 
-    if ('items' in item) {
-        return (
-            <Collapsible
-                asChild
-                defaultOpen={item.items.some((child) =>
-                    isCurrentUrl(child.href),
-                )}
-                className="group/collapsible"
-            >
-                <SidebarMenuItem>
-                    <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip={{ children: item.title }}>
-                            {item.icon && <item.icon />}
-                            <span>{item.title}</span>
-                            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                        <SidebarMenuSub>
-                            {item.items.map((child) => (
-                                <SidebarMenuSubItem key={child.title}>
-                                    <SidebarMenuSubButton
-                                        asChild
-                                        isActive={isCurrentUrl(child.href)}
-                                    >
-                                        <Link href={child.href} prefetch>
-                                            <span>{child.title}</span>
-                                        </Link>
-                                    </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                            ))}
-                        </SidebarMenuSub>
-                    </CollapsibleContent>
-                </SidebarMenuItem>
-            </Collapsible>
-        );
+/**
+ * Runs consecutive flat items into one unlabeled section; each NavGroupItem
+ * becomes its own section labeled with the group's own title.
+ */
+function buildSections(items: NavItem[]): Section[] {
+    const sections: Section[] = [];
+    let leafRun: NavLeafItem[] = [];
+
+    const flushLeafRun = () => {
+        if (leafRun.length === 0) {
+            return;
+        }
+
+        sections.push({ label: null, items: leafRun });
+        leafRun = [];
+    };
+
+    for (const item of items) {
+        if ('items' in item) {
+            flushLeafRun();
+            sections.push({ label: item.title, items: item.items });
+        } else {
+            leafRun.push(item);
+        }
     }
 
-    return (
-        <SidebarMenuItem>
-            <SidebarMenuButton
-                asChild
-                isActive={isCurrentUrl(item.href)}
-                tooltip={{ children: item.title }}
-            >
-                <Link href={item.href} prefetch>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
-                </Link>
-            </SidebarMenuButton>
-        </SidebarMenuItem>
-    );
+    flushLeafRun();
+
+    return sections;
 }
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
+    const { isCurrentUrl } = useCurrentUrl();
+    const sections = buildSections(items);
+
     return (
-        <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
-            <SidebarMenu>
-                {items.map((item) => (
-                    <NavMainItem key={item.title} item={item} />
-                ))}
-            </SidebarMenu>
-        </SidebarGroup>
+        <>
+            {sections.map((section, index) => (
+                <SidebarGroup
+                    key={section.label ?? `section-${index}`}
+                    className="px-2 py-0"
+                >
+                    {section.label && (
+                        <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
+                    )}
+                    <SidebarMenu>
+                        {section.items.map((item) => (
+                            <SidebarMenuItem key={item.title}>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isCurrentUrl(item.href)}
+                                    tooltip={{ children: item.title }}
+                                >
+                                    <Link href={item.href} prefetch>
+                                        {item.icon && <item.icon />}
+                                        <span>{item.title}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        ))}
+                    </SidebarMenu>
+                </SidebarGroup>
+            ))}
+        </>
     );
 }

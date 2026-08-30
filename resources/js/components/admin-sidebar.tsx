@@ -3,10 +3,14 @@ import {
     Award,
     BookOpen,
     CreditCard,
+    GraduationCap,
+    KeyRound,
     LayoutGrid,
+    Presentation,
     Settings,
     ShieldCheck,
     Tags,
+    UserCog,
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -65,10 +69,12 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Student',
                 href: studentsIndex(),
+                icon: GraduationCap,
             },
             {
                 title: 'Instructor',
                 href: instructorsIndex(),
+                icon: Presentation,
             },
         ],
     },
@@ -79,10 +85,12 @@ const mainNavItems: NavItem[] = [
             {
                 title: 'Admins',
                 href: adminsIndex(),
+                icon: UserCog,
             },
             {
                 title: 'Role & Permission',
                 href: rolesIndex(),
+                icon: KeyRound,
             },
         ],
     },

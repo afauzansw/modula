@@ -32,18 +32,14 @@ export default function Dashboard() {
                                 <Icon className="size-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-semibold">
-                                    —
-                                </div>
+                                <div className="text-2xl font-semibold">—</div>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
 
                 <div className="space-y-3">
-                    <h2 className="text-sm font-medium">
-                        Continue Learning
-                    </h2>
+                    <h2 className="text-sm font-medium">Continue Learning</h2>
                     <MockupTable
                         columns={['Course', 'Progress', 'Last Accessed']}
                     />
