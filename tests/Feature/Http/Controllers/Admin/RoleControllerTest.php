@@ -54,7 +54,7 @@ test('store creates a custom role with the given permissions', function () {
     $this->actingAs(adminUser())
         ->post(route('admin.roles.store'), [
             'name' => 'Support',
-            'permissions' => [AdminPermission::Users->value, AdminPermission::Orders->value],
+            'permissions' => [AdminPermission::Users->value, AdminPermission::Categories->value],
         ])
         ->assertRedirect(route('admin.roles.index'));
 
@@ -62,7 +62,7 @@ test('store creates a custom role with the given permissions', function () {
 
     expect($role->is_system)->toBeFalse()
         ->and($role->permissions->pluck('name')->sort()->values()->all())
-        ->toBe([AdminPermission::Orders->value, AdminPermission::Users->value]);
+        ->toBe([AdminPermission::Categories->value, AdminPermission::Users->value]);
 });
 
 test('store rejects a reserved system-role name', function () {
@@ -100,14 +100,14 @@ test('update renames a custom role and re-syncs its permissions', function () {
     $this->actingAs(adminUser())
         ->put(route('admin.roles.update', $role), [
             'name' => 'Support Team',
-            'permissions' => [AdminPermission::Orders->value],
+            'permissions' => [AdminPermission::Categories->value],
         ])
         ->assertRedirect(route('admin.roles.index'));
 
     $role->refresh();
 
     expect($role->name)->toBe('Support Team')
-        ->and($role->permissions->pluck('name')->all())->toBe([AdminPermission::Orders->value]);
+        ->and($role->permissions->pluck('name')->all())->toBe([AdminPermission::Categories->value]);
 });
 
 test('updating a system role is forbidden', function () {

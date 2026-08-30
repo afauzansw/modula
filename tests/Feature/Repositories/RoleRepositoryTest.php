@@ -20,10 +20,10 @@ test('the role repository interface resolves to the Eloquent implementation', fu
 });
 
 test('createCustomRole() creates a non-system role with the given permissions', function () {
-    $role = roleRepo()->createCustomRole('Support', ['admin.users', 'admin.orders']);
+    $role = roleRepo()->createCustomRole('Support', ['admin.users', 'admin.categories']);
 
     expect($role->is_system)->toBeFalse()
-        ->and($role->permissions->pluck('name')->sort()->values()->all())->toBe(['admin.orders', 'admin.users']);
+        ->and($role->permissions->pluck('name')->sort()->values()->all())->toBe(['admin.categories', 'admin.users']);
 });
 
 test('createCustomRole() rejects a permission outside the catalogue and creates nothing', function () {
@@ -46,10 +46,10 @@ test('createCustomRole() rejects a duplicate name', function () {
 test('updateCustomRole() renames and re-syncs permissions', function () {
     $role = roleRepo()->createCustomRole('Support', ['admin.users']);
 
-    $updated = roleRepo()->updateCustomRole($role, 'Support Team', ['admin.orders', 'admin.payments']);
+    $updated = roleRepo()->updateCustomRole($role, 'Support Team', ['admin.categories', 'admin.payments']);
 
     expect($updated->name)->toBe('Support Team')
-        ->and($updated->permissions->pluck('name')->sort()->values()->all())->toBe(['admin.orders', 'admin.payments']);
+        ->and($updated->permissions->pluck('name')->sort()->values()->all())->toBe(['admin.categories', 'admin.payments']);
 });
 
 test('updateCustomRole() refuses a system role and changes nothing', function () {

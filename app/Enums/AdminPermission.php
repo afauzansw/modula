@@ -13,14 +13,13 @@ enum AdminPermission: string
 {
     case Dashboard = 'admin.dashboard';
     case Users = 'admin.users';
+    case Admins = 'admin.admins';
     case Roles = 'admin.roles';
     case Categories = 'admin.categories';
     case Courses = 'admin.courses';
-    case Enrollments = 'admin.enrollments';
-    case Orders = 'admin.orders';
     case Payments = 'admin.payments';
     case Certificates = 'admin.certificates';
-    case Ratings = 'admin.ratings';
+    case Settings = 'admin.settings';
 
     /**
      * Human-readable menu label for the future assign-permissions UI.
@@ -30,14 +29,13 @@ enum AdminPermission: string
         return match ($this) {
             self::Dashboard => 'Dashboard',
             self::Users => 'Users',
+            self::Admins => 'Admins',
             self::Roles => 'Roles & Permissions',
             self::Categories => 'Categories',
             self::Courses => 'Courses',
-            self::Enrollments => 'Enrollments',
-            self::Orders => 'Orders',
             self::Payments => 'Payments',
             self::Certificates => 'Certificates',
-            self::Ratings => 'Ratings & Reviews',
+            self::Settings => 'App Settings',
         };
     }
 

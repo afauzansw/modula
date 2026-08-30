@@ -115,7 +115,7 @@ wrapper over Laravel's auth state, not CRUD on a domain entity:
 
 - **`App\Enums\AdminPermission`** — the canonical, code-defined permission
   catalogue: one case per admin-dashboard menu (`admin.users`, `admin.roles`,
-  `admin.orders`, …). Admins never create permissions.
+  `admin.courses`, …). Admins never create permissions.
 - **`App\Enums\SystemRole`** — the three built-in roles (`admin`, `instructor`,
   `student`). Their names are reserved.
 - **`App\Models\Role`** extends Spatie's Role and adds an `is_system` boolean
