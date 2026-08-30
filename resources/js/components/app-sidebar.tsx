@@ -1,5 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
-import { GraduationCap, LayoutGrid, ShieldCheck } from 'lucide-react';
+import {
+    Award,
+    BookOpen,
+    CreditCard,
+    GraduationCap,
+    LayoutGrid,
+    ShieldCheck,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -14,7 +21,10 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { dashboard as adminDashboard } from '@/routes/admin';
+import { index as certificatesIndex } from '@/routes/certificates';
+import { index as coursesIndex } from '@/routes/courses';
 import { dashboard as instructorDashboard } from '@/routes/instructor';
+import { index as paymentsIndex } from '@/routes/payments';
 import type { Auth, NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -25,6 +35,21 @@ export function AppSidebar() {
             title: 'Dashboard',
             href: dashboard(),
             icon: LayoutGrid,
+        },
+        {
+            title: 'My Courses',
+            href: coursesIndex(),
+            icon: BookOpen,
+        },
+        {
+            title: 'My Payment',
+            href: paymentsIndex(),
+            icon: CreditCard,
+        },
+        {
+            title: 'My Certificate',
+            href: certificatesIndex(),
+            icon: Award,
         },
     ];
 

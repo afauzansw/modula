@@ -1,25 +1,48 @@
 import { Head } from '@inertiajs/react';
-import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
+import { Award, BookOpen, CheckCircle2, Clock } from 'lucide-react';
+import Heading from '@/components/heading';
+import { MockupTable } from '@/components/mockup-table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { dashboard } from '@/routes';
+
+const stats = [
+    { label: 'Total Courses', icon: BookOpen },
+    { label: 'In Progress', icon: Clock },
+    { label: 'Completed', icon: CheckCircle2 },
+    { label: 'Certificates Earned', icon: Award },
+];
 
 export default function Dashboard() {
     return (
         <>
             <Head title="Dashboard" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
-                    <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
-                        <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
-                    </div>
+            <div className="space-y-6 p-4">
+                <Heading
+                    title="Dashboard"
+                    description="An overview of your courses and learning progress"
+                />
+
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {stats.map(({ label, icon: Icon }) => (
+                        <Card key={label}>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-muted-foreground">
+                                    {label}
+                                </CardTitle>
+                                <Icon className="size-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-semibold">—</div>
+                            </CardContent>
+                        </Card>
+                    ))}
                 </div>
-                <div className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 md:min-h-min dark:border-sidebar-border">
-                    <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />
+
+                <div className="space-y-3">
+                    <h2 className="text-sm font-medium">Continue Learning</h2>
+                    <MockupTable
+                        columns={['Course', 'Progress', 'Last Accessed']}
+                    />
                 </div>
             </div>
         </>
