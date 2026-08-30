@@ -64,6 +64,32 @@ Interfaces live in `Contracts/`, Eloquent implementations in `Eloquent/`.
 interface to its concrete class via the `$bindings` array; controllers and
 services constructor-inject the **interface**, never the implementation.
 
+### Route files
+
+Each role gets its own `routes/{role}/` directory holding one file per
+resource (`routes/admin/courses.php`, `routes/instructor/orders.php`,
+`routes/student/payments.php`, …) — no per-role entry file in `routes/`
+itself. `bootstrap/app.php`'s `withRouting(..., then: …)` callback owns the
+wiring: a `$roleRouteGroups` config array (middleware, URL `prefix`, route
+`name` prefix per role) drives a loop that opens each role's
+`Route::middleware(...)->prefix(...)->name(...)->group()`, `glob()`s that
+role's directory, sorts the file list for deterministic order, and `require`s
+every file inside the open group — so a resource file just declares its
+routes and inherits the group's middleware/prefix/name for free. The whole
+loop runs inside one outer `Route::middleware('web')->group()`, since routes
+registered from a `then:` callback don't automatically land in the `web`
+middleware group the way `routes/web.php`'s own contents do.
+
+**Student is the odd one out on purpose:** unlike Admin (`/admin` prefix +
+`admin.` name prefix, permission-gated per resource) and Instructor
+(`/instructor` prefix + `instructor.` name prefix, `role:instructor`-gated),
+Student's config entry has **`prefix: null, name: null`** — its routes stay
+at the plain paths they always had (`/dashboard`, `/courses`, `/payments`,
+`/certificates`), just now organized into `routes/student/*.php` files for
+consistency with the other two roles. This matches the deliberate "no
+`/student` prefix" decision in §3/§12.1: the directory is for file
+organization only, not a URL or access-control boundary.
+
 ### `BaseRepository` (`app/Repositories/Eloquent/BaseRepository.php`)
 
 `abstract`, implements `BaseRepositoryInterface`. Every Eloquent repository
