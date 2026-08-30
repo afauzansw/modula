@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\AdminPermission;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\BulkDestroyRoleRequest;
 use App\Http\Requests\Admin\StoreRoleRequest;
 use App\Http\Requests\Admin\UpdateRoleRequest;
 use App\Models\Role;
@@ -100,6 +101,22 @@ class RoleController extends Controller
         $this->roles->deleteCustomRole($role);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role deleted.')]);
+
+        return redirect()->route('admin.roles.index');
+    }
+
+    /**
+     * Delete every selected custom role in one query. System roles among the
+     * ids are silently skipped (EloquentRoleRepository::bulkDelete).
+     */
+    public function bulkDestroy(BulkDestroyRoleRequest $request): RedirectResponse
+    {
+        $deleted = $this->roles->bulkDelete($request->validated('ids'));
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => trans_choice('{0}No roles deleted.|{1}:count role deleted.|[2,*]:count roles deleted.', $deleted, ['count' => $deleted]),
+        ]);
 
         return redirect()->route('admin.roles.index');
     }

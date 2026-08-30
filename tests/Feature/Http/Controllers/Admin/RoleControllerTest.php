@@ -41,6 +41,34 @@ test('the index page lists roles with their permission names', function () {
         );
 });
 
+test('the index page filters roles by a partial name match', function () {
+    $user = adminUser();
+    Role::query()->create(['name' => 'Support Team', 'guard_name' => 'web', 'is_system' => false]);
+    Role::query()->create(['name' => 'Billing', 'guard_name' => 'web', 'is_system' => false]);
+
+    $this->actingAs($user)
+        ->get(route('admin.roles.index', ['filter' => ['name' => 'supp']]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('roles.data', fn ($data) => collect($data)->pluck('name')->all() === ['Support Team']),
+        );
+});
+
+test('the index page sorts roles by name', function () {
+    $user = adminUser();
+    Role::query()->create(['name' => 'Zeta', 'guard_name' => 'web', 'is_system' => false]);
+    Role::query()->create(['name' => 'Alpha', 'guard_name' => 'web', 'is_system' => false]);
+
+    $this->actingAs($user)
+        ->get(route('admin.roles.index', ['sort' => 'name']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('roles.data', function ($data) {
+                $names = collect($data)->pluck('name');
+
+                return $names->search('Alpha') < $names->search('Zeta');
+            }),
+        );
+});
+
 test('the create page is displayed', function () {
     $this->actingAs(adminUser())
         ->get(route('admin.roles.create'))
@@ -138,4 +166,39 @@ test('destroying a system role is forbidden', function () {
         ->assertForbidden();
 
     expect(Role::query()->where('name', 'student')->exists())->toBeTrue();
+});
+
+test('bulk destroy deletes every selected custom role', function () {
+    $first = Role::query()->create(['name' => 'One', 'guard_name' => 'web', 'is_system' => false]);
+    $second = Role::query()->create(['name' => 'Two', 'guard_name' => 'web', 'is_system' => false]);
+
+    $this->actingAs(adminUser())
+        ->delete(route('admin.roles.bulk-destroy'), ['ids' => [$first->id, $second->id]])
+        ->assertRedirect(route('admin.roles.index'));
+
+    expect(Role::query()->whereIn('id', [$first->id, $second->id])->count())->toBe(0);
+});
+
+test('bulk destroy leaves system roles in the selection untouched', function () {
+    $custom = Role::query()->create(['name' => 'Temp', 'guard_name' => 'web', 'is_system' => false]);
+    $admin = Role::findByName('admin');
+
+    $this->actingAs(adminUser())
+        ->delete(route('admin.roles.bulk-destroy'), ['ids' => [$custom->id, $admin->id]])
+        ->assertRedirect(route('admin.roles.index'));
+
+    expect(Role::query()->where('id', $custom->id)->exists())->toBeFalse()
+        ->and(Role::query()->where('id', $admin->id)->exists())->toBeTrue();
+});
+
+test('bulk destroy requires the admin.roles permission', function () {
+    $this->actingAs(User::factory()->create())
+        ->delete(route('admin.roles.bulk-destroy'), ['ids' => [1]])
+        ->assertForbidden();
+});
+
+test('bulk destroy rejects an empty selection', function () {
+    $this->actingAs(adminUser())
+        ->delete(route('admin.roles.bulk-destroy'), ['ids' => []])
+        ->assertInvalid(['ids']);
 });

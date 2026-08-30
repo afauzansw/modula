@@ -1,8 +1,16 @@
-import { Form, Head, Link } from '@inertiajs/react';
+import { Form, Head, Link, router } from '@inertiajs/react';
+import type { ColumnDef } from '@tanstack/react-table';
+import { useState } from 'react';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
+import {
+    DataTable,
+    DataTableColumnHeader,
+    useInertiaDataTable,
+} from '@/components/data-table';
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogClose,
@@ -12,8 +20,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { create, edit, index } from '@/routes/admin/roles';
-import type { Paginated } from '@/types';
+import { bulkDestroy, create, edit, index } from '@/routes/admin/roles';
 
 type RoleListItem = {
     id: number;
@@ -22,11 +29,99 @@ type RoleListItem = {
     permissions: string[];
 };
 
-type Props = {
-    roles: Paginated<RoleListItem>;
-};
+/** Stable reference — maps the `name` column to the backend `sort` field. */
+const sortFields = { name: 'name' };
 
-export default function RolesIndex({ roles }: Props) {
+const columns: ColumnDef<RoleListItem>[] = [
+    {
+        id: 'select',
+        enableSorting: false,
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected()
+                        ? true
+                        : table.getIsSomePageRowsSelected()
+                          ? 'indeterminate'
+                          : false
+                }
+                onCheckedChange={(value) =>
+                    table.toggleAllPageRowsSelected(value === true)
+                }
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                disabled={!row.getCanSelect()}
+                onCheckedChange={(value) => row.toggleSelected(value === true)}
+                aria-label="Select row"
+            />
+        ),
+    },
+    {
+        accessorKey: 'name',
+        header: ({ column }) => (
+            <DataTableColumnHeader
+                title="Name"
+                canSort={column.getCanSort()}
+                sorted={column.getIsSorted()}
+                onToggleSort={column.getToggleSortingHandler()}
+            />
+        ),
+        cell: ({ row }) => (
+            <span className="font-medium">{row.original.name}</span>
+        ),
+    },
+    {
+        accessorKey: 'is_system',
+        enableSorting: false,
+        header: 'Type',
+        cell: ({ row }) => (
+            <Badge variant={row.original.is_system ? 'secondary' : 'outline'}>
+                {row.original.is_system ? 'System' : 'Custom'}
+            </Badge>
+        ),
+    },
+    {
+        accessorKey: 'permissions',
+        enableSorting: false,
+        header: 'Permissions',
+        cell: ({ row }) => {
+            const count = row.original.permissions.length;
+
+            return (
+                <span className="text-muted-foreground">
+                    {count} permission{count === 1 ? '' : 's'}
+                </span>
+            );
+        },
+    },
+    {
+        id: 'actions',
+        enableSorting: false,
+        header: () => <span className="sr-only">Actions</span>,
+        cell: ({ row }) =>
+            row.original.is_system ? null : (
+                <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={edit(row.original.id)}>Edit</Link>
+                    </Button>
+                    <DeleteRoleDialog role={row.original} />
+                </div>
+            ),
+    },
+];
+
+export default function RolesIndex() {
+    const source = useInertiaDataTable<RoleListItem>({
+        propKey: 'roles',
+        url: index().url,
+        filterKey: 'name',
+        sortFields,
+    });
+
     return (
         <>
             <Head title="Roles & Permissions" />
@@ -42,109 +137,22 @@ export default function RolesIndex({ roles }: Props) {
                     </Button>
                 </div>
 
-                <div className="overflow-x-auto rounded-lg border">
-                    <table className="w-full text-sm">
-                        <thead className="border-b bg-muted/50 text-left">
-                            <tr>
-                                <th className="px-4 py-2 font-medium">Name</th>
-                                <th className="px-4 py-2 font-medium">Type</th>
-                                <th className="px-4 py-2 font-medium">
-                                    Permissions
-                                </th>
-                                <th className="px-4 py-2 text-right font-medium">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {roles.data.map((role) => (
-                                <tr
-                                    key={role.id}
-                                    className="border-b last:border-0"
-                                >
-                                    <td className="px-4 py-3 font-medium">
-                                        {role.name}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Badge
-                                            variant={
-                                                role.is_system
-                                                    ? 'secondary'
-                                                    : 'outline'
-                                            }
-                                        >
-                                            {role.is_system
-                                                ? 'System'
-                                                : 'Custom'}
-                                        </Badge>
-                                    </td>
-                                    <td className="px-4 py-3 text-muted-foreground">
-                                        {role.permissions.length} permission
-                                        {role.permissions.length === 1
-                                            ? ''
-                                            : 's'}
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {!role.is_system && (
-                                            <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    asChild
-                                                >
-                                                    <Link href={edit(role.id)}>
-                                                        Edit
-                                                    </Link>
-                                                </Button>
-                                                <DeleteRoleDialog role={role} />
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                            {roles.data.length === 0 && (
-                                <tr>
-                                    <td
-                                        colSpan={4}
-                                        className="px-4 py-6 text-center text-muted-foreground"
-                                    >
-                                        No roles yet.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-
-                {roles.last_page > 1 && (
-                    <nav className="flex flex-wrap gap-1">
-                        {roles.links.map((link, i) => (
-                            <Button
-                                key={i}
-                                asChild={link.url !== null}
-                                disabled={link.url === null}
-                                variant={link.active ? 'default' : 'outline'}
-                                size="sm"
-                            >
-                                {link.url !== null ? (
-                                    <Link href={link.url} preserveScroll>
-                                        <span
-                                            dangerouslySetInnerHTML={{
-                                                __html: link.label,
-                                            }}
-                                        />
-                                    </Link>
-                                ) : (
-                                    <span
-                                        dangerouslySetInnerHTML={{
-                                            __html: link.label,
-                                        }}
-                                    />
-                                )}
-                            </Button>
-                        ))}
-                    </nav>
-                )}
+                <DataTable
+                    columns={columns}
+                    source={source}
+                    searchPlaceholder="Search roles…"
+                    emptyMessage="No roles yet."
+                    enableRowSelection={(role) => !role.is_system}
+                    renderSelectionActions={({
+                        selectedIds,
+                        clearSelection,
+                    }) => (
+                        <BulkDeleteRolesDialog
+                            ids={selectedIds.map(Number)}
+                            onDeleted={clearSelection}
+                        />
+                    )}
+                />
             </div>
         </>
     );
@@ -184,6 +192,63 @@ function DeleteRoleDialog({ role }: { role: RoleListItem }) {
                         </DialogFooter>
                     )}
                 </Form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function BulkDeleteRolesDialog({
+    ids,
+    onDeleted,
+}: {
+    ids: number[];
+    onDeleted: () => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const [processing, setProcessing] = useState(false);
+
+    const submit = () => {
+        setProcessing(true);
+        router.delete(bulkDestroy.url(), {
+            data: { ids },
+            preserveScroll: true,
+            onSuccess: () => {
+                setOpen(false);
+                onDeleted();
+            },
+            onFinish: () => setProcessing(false),
+        });
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                    Delete {ids.length} selected
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogTitle>
+                    Delete {ids.length} role{ids.length === 1 ? '' : 's'}?
+                </DialogTitle>
+                <DialogDescription>
+                    This permanently removes the selected custom roles and
+                    revokes them from anyone holding them. This cannot be
+                    undone.
+                </DialogDescription>
+
+                <DialogFooter className="gap-2">
+                    <DialogClose asChild>
+                        <Button variant="secondary">Cancel</Button>
+                    </DialogClose>
+                    <Button
+                        variant="destructive"
+                        disabled={processing}
+                        onClick={submit}
+                    >
+                        Delete roles
+                    </Button>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
