@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Repositories\Contracts\AuthRepositoryInterface;
+use App\Repositories\Contracts\CategoryRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Eloquent\EloquentAuthRepository;
+use App\Repositories\Eloquent\EloquentCategoryRepository;
 use App\Repositories\Eloquent\EloquentRoleRepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +23,7 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public array $bindings = [
         AuthRepositoryInterface::class => EloquentAuthRepository::class,
+        CategoryRepositoryInterface::class => EloquentCategoryRepository::class,
         RoleRepositoryInterface::class => EloquentRoleRepository::class,
     ];
 }
