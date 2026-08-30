@@ -4,7 +4,7 @@
 
 ## Status
 
-Early development. The repo is currently the [`laravel/react-starter-kit`](https://github.com/laravel/react-starter-kit) scaffold — auth, settings, passkeys, 2FA — plus this documentation. The LMS domain (roles, models, migrations, controllers, and the `/instructor` and `/admin` areas) is being built out. See [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md) for the target domain design and the business rules behind it.
+Early development. Auth (Fortify), settings, passkeys, and 2FA are in place from the [`laravel/react-starter-kit`](https://github.com/laravel/react-starter-kit) scaffold this project started from. Built since: the LMS domain schema/models/factories/seeders, a layered Repository architecture, and role & permission management with its first HTTP-layer slice (`/admin/roles`). The three role areas (`/dashboard` for students, `/instructor`, `/admin`) each have their own layout and a placeholder dashboard. Most feature behaviour — checkout, quiz grading, progress tracking, certificates, ratings — isn't implemented yet. See [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md) for the target domain design, current implementation status, and the business rules behind it.
 
 ## Tech stack
 
@@ -108,26 +108,28 @@ bun run dev
 ```
 app/
   Actions/Fortify/      auth actions (create user, update password, ...)
+  Enums/                AdminPermission, SystemRole
   Http/
-    Controllers/
+    Controllers/        Admin/RoleController, Settings/
     Middleware/          HandleInertiaRequests, HandleAppearance
-    Requests/
-  Models/                User  (LMS domain models to come)
+    Requests/            Admin/, Settings/
+  Models/                User, Role, and the LMS domain models (Course, Module, Lesson, ...)
   Providers/
+  Repositories/          Contracts/, Eloquent/, Exceptions/ — the data-access layer (see PROJECT_CONTEXT.md)
 bootstrap/app.php        middleware, routing, exception handling
 config/
 database/
-  migrations/            starter-kit tables today; LMS schema being added
-  factories/  seeders/
+  migrations/            starter-kit tables + the LMS domain schema
+  factories/  seeders/   one seeder per model, chained in order by DatabaseSeeder
 resources/
   js/
-    pages/               Inertia page components (auth/, settings/, ...)
-    layouts/             app/, auth/, settings/  (Student/Instructor/AdminLayout to come)
+    pages/               Inertia page components (auth/, settings/, admin/, instructor/, ...)
+    layouts/             app/, auth/, settings/, admin/, instructor/
     components/ui/        shadcn/ui components
     actions/  routes/     Wayfinder-generated typed backend calls
     hooks/  lib/  types/
 routes/
-  web.php  settings.php  console.php
+  web.php  settings.php  admin.php  instructor.php  console.php
 tests/                   Pest (Feature + Unit)
 docs/
   PROJECT_CONTEXT.md     domain + business-logic reference
@@ -139,11 +141,11 @@ Three roles (`admin`, `instructor`, `student`), three route areas each with its 
 
 | Path | Audience | Focus |
 | --- | --- | --- |
-| `/` | students | catalog browsing, course consumption, quizzes, assignments, ratings |
+| `/dashboard` | students | catalog browsing, course consumption, quizzes, assignments, ratings |
 | `/instructor` | instructors | course/module/lesson authoring, quiz builder, grading, progress |
 | `/admin` | admins | user management, categories, oversight |
 
-Rationale and the full domain model — enrollment/progress, the paid-checkout invariant, quizzes, ratings, certificates — are documented in [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md).
+`/` redirects to `/login`; `/instructor` and `/admin` each redirect to their own `dashboard` route. Rationale and the full domain model — enrollment/progress, the paid-checkout invariant, quizzes, ratings, certificates — are documented in [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md).
 
 ## License
 
