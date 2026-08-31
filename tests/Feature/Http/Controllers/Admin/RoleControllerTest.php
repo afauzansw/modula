@@ -4,6 +4,7 @@ use App\Enums\AdminPermission;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(fn () => $this->seed(RolePermissionSeeder::class));
@@ -98,10 +99,9 @@ test('permissions requires the admin.roles permission', function () {
         ->assertForbidden();
 });
 
-test('the create page is displayed', function () {
-    $this->actingAs(adminUser())
-        ->get(route('admin.roles.create'))
-        ->assertInertia(fn (Assert $page) => $page->component('admin/roles/create'));
+test('create and edit have no routes (they are modals on the index)', function () {
+    expect(Route::has('admin.roles.create'))->toBeFalse()
+        ->and(Route::has('admin.roles.edit'))->toBeFalse();
 });
 
 test('store creates a custom role with the given permissions', function () {
@@ -137,28 +137,6 @@ test('store rejects a duplicate role name', function () {
     $this->actingAs(adminUser())
         ->post(route('admin.roles.store'), ['name' => 'Support', 'permissions' => []])
         ->assertInvalid(['name']);
-});
-
-test('the edit page renders the role without the permission catalogue', function () {
-    $role = Role::query()->create(['name' => 'Support', 'guard_name' => 'web', 'is_system' => false]);
-    $role->syncPermissions([AdminPermission::Users->value]);
-
-    $this->actingAs(adminUser())
-        ->get(route('admin.roles.edit', $role))
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/roles/edit')
-            ->where('role.name', 'Support')
-            ->where('role.permissions', [AdminPermission::Users->value])
-            ->missing('permissions'),
-        );
-});
-
-test('editing a system role is forbidden', function () {
-    $admin = Role::findByName('admin');
-
-    $this->actingAs(adminUser())
-        ->get(route('admin.roles.edit', $admin))
-        ->assertForbidden();
 });
 
 test('update renames a custom role and re-syncs its permissions', function () {

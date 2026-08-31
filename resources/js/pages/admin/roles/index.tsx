@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import type { ColumnDef } from '@tanstack/react-table';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -10,8 +10,9 @@ import {
 import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { create, edit, index } from '@/routes/admin/roles';
+import { index } from '@/routes/admin/roles';
 import type { Role } from '@/types';
+import { RoleFormDialog } from './components/role-form-dialog';
 
 /** Stable reference — maps the `name` column to the backend `sort` field. */
 const sortFields = { name: 'name' };
@@ -62,9 +63,14 @@ const columns: ColumnDef<Role>[] = [
         cell: ({ row }) =>
             row.original.is_system ? null : (
                 <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href={edit(row.original.id)}>Edit</Link>
-                    </Button>
+                    <RoleFormDialog
+                        role={row.original}
+                        trigger={
+                            <Button variant="outline" size="sm">
+                                Edit
+                            </Button>
+                        }
+                    />
                     <ConfirmDialog
                         trigger={
                             <Button variant="destructive" size="sm">
@@ -98,9 +104,7 @@ export default function RolesIndex() {
                         title="Roles & Permissions"
                         description="Manage custom admin roles and the permissions they carry"
                     />
-                    <Button asChild>
-                        <Link href={create()}>New role</Link>
-                    </Button>
+                    <RoleFormDialog trigger={<Button>New role</Button>} />
                 </div>
 
                 <DataTable

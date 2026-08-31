@@ -15,5 +15,6 @@ Route::middleware('permission:'.AdminPermission::Roles->value)->group(function (
     Route::get('roles/fetch', [RoleController::class, 'fetch'])->name('roles.fetch');
     Route::get('roles/permissions', [RoleController::class, 'permissions'])->name('roles.permissions');
 
-    Route::resource('roles', RoleController::class)->except('show');
+    // create/edit are modals on the index page, not standalone pages.
+    Route::resource('roles', RoleController::class)->except(['show', 'create', 'edit']);
 });

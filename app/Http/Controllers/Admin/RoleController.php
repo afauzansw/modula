@@ -72,11 +72,6 @@ class RoleController extends Controller
         return response()->json(AdminPermission::labels());
     }
 
-    public function create(): Response
-    {
-        return Inertia::render('admin/roles/create');
-    }
-
     public function store(StoreRoleRequest $request): RedirectResponse
     {
         $this->roles->createCustomRole($request->string('name')->toString(), $request->input('permissions', []));
@@ -84,19 +79,6 @@ class RoleController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role created.')]);
 
         return redirect()->route('admin.roles.index');
-    }
-
-    public function edit(Role $role): Response
-    {
-        abort_if($role->is_system, 403);
-
-        return Inertia::render('admin/roles/edit', [
-            'role' => [
-                'id' => $role->id,
-                'name' => $role->name,
-                'permissions' => $role->permissions->pluck('name')->all(),
-            ],
-        ]);
     }
 
     public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
