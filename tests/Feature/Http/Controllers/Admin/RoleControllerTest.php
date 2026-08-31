@@ -75,6 +75,25 @@ test('fetch sorts roles by name', function () {
     expect($names->search('Alpha'))->toBeLessThan($names->search('Zeta'));
 });
 
+test('fetch filters roles by type', function () {
+    Role::query()->create(['name' => 'Support', 'guard_name' => 'web', 'is_system' => false]);
+    $user = adminUser();
+
+    $custom = $this->actingAs($user)
+        ->getJson(route('admin.roles.fetch', ['filter' => ['is_system' => '0']]))
+        ->assertOk()
+        ->json('data');
+
+    $system = $this->actingAs($user)
+        ->getJson(route('admin.roles.fetch', ['filter' => ['is_system' => '1']]))
+        ->assertOk()
+        ->json('data');
+
+    expect(collect($custom)->pluck('name')->all())->toBe(['Support'])
+        ->and(collect($system)->pluck('is_system')->unique()->all())->toBe([true])
+        ->and(collect($system)->pluck('name'))->not->toContain('Support');
+});
+
 test('fetch requires the admin.roles permission', function () {
     $this->actingAs(User::factory()->create())
         ->getJson(route('admin.roles.fetch'))

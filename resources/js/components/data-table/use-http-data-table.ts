@@ -96,6 +96,21 @@ export function useHttpDataTable<TData>({
     const sortParam = params.get('sort') ?? '';
     const pageParam = Math.max(1, Number(params.get('page') ?? '1') || 1);
 
+    // Every `filter[*]` param except the search key drives the filter card.
+    const filters = useMemo(() => {
+        const out: Record<string, string> = {};
+
+        for (const [key, value] of params.entries()) {
+            const match = key.match(/^filter\[(.+)\]$/);
+
+            if (match && match[1] !== filterKey) {
+                out[match[1]] = value;
+            }
+        }
+
+        return out;
+    }, [params, filterKey]);
+
     const fieldToColumn = useMemo(() => {
         const inverse: Record<string, string> = {};
 
@@ -163,6 +178,10 @@ export function useHttpDataTable<TData>({
     const currentParams = useCallback((): URLSearchParams => {
         const next = new URLSearchParams();
 
+        for (const [key, value] of Object.entries(filters)) {
+            next.set(`filter[${key}]`, value);
+        }
+
         if (searchValue !== '') {
             next.set(`filter[${filterKey}]`, searchValue);
         }
@@ -172,7 +191,7 @@ export function useHttpDataTable<TData>({
         }
 
         return next;
-    }, [searchValue, sortParam, filterKey]);
+    }, [filters, searchValue, sortParam, filterKey]);
 
     const onSortingChange: OnChangeFn<SortingState> = (updater) => {
         const next = typeof updater === 'function' ? updater(sorting) : updater;
@@ -221,6 +240,26 @@ export function useHttpDataTable<TData>({
         );
     };
 
+    const setFilters = (next: Record<string, string>) => {
+        const nextParams = new URLSearchParams();
+
+        for (const [key, value] of Object.entries(next)) {
+            if (value !== '') {
+                nextParams.set(`filter[${key}]`, value);
+            }
+        }
+
+        if (searchValue !== '') {
+            nextParams.set(`filter[${filterKey}]`, searchValue);
+        }
+
+        if (sortParam !== '') {
+            nextParams.set('sort', sortParam);
+        }
+
+        navigate(nextParams);
+    };
+
     return {
         data: payload?.data ?? [],
         pageCount: payload?.last_page ?? 1,
@@ -232,5 +271,7 @@ export function useHttpDataTable<TData>({
         onPaginationChange,
         globalFilter: searchValue,
         onGlobalFilterChange,
+        filters,
+        setFilters,
     };
 }

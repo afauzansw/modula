@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { index } from '@/routes/admin/roles';
 import type { Role } from '@/types';
+import { RoleActions } from './components/role-actions';
+import { RoleCard } from './components/role-card';
 import { RoleFormDialog } from './components/role-form-dialog';
 
 /** Stable reference — maps the `name` column to the backend `sort` field. */
@@ -60,30 +62,7 @@ const columns: ColumnDef<Role>[] = [
         id: 'actions',
         enableSorting: false,
         header: () => <span className="sr-only">Actions</span>,
-        cell: ({ row }) =>
-            row.original.is_system ? null : (
-                <div className="flex justify-end gap-2">
-                    <RoleFormDialog
-                        role={row.original}
-                        trigger={
-                            <Button variant="outline" size="sm">
-                                Edit
-                            </Button>
-                        }
-                    />
-                    <ConfirmDialog
-                        trigger={
-                            <Button variant="destructive" size="sm">
-                                Delete
-                            </Button>
-                        }
-                        title={`Delete "${row.original.name}"?`}
-                        description="This permanently removes the role and revokes it from anyone holding it. This cannot be undone."
-                        form={RoleController.destroy.form(row.original.id)}
-                        confirmLabel="Delete role"
-                    />
-                </div>
-            ),
+        cell: ({ row }) => <RoleActions role={row.original} />,
     },
 ];
 
@@ -114,6 +93,19 @@ export default function RolesIndex() {
                     searchPlaceholder="Search roles…"
                     emptyMessage="No roles yet."
                     canSelect={(role) => !role.is_system}
+                    renderCard={(role) => <RoleCard role={role} />}
+                    viewStorageKey="admin.roles.view"
+                    filters={[
+                        {
+                            key: 'is_system',
+                            label: 'Type',
+                            type: 'select',
+                            options: [
+                                { label: 'System', value: '1' },
+                                { label: 'Custom', value: '0' },
+                            ],
+                        },
+                    ]}
                     renderSelectionActions={({
                         selectedIds,
                         clearSelection,

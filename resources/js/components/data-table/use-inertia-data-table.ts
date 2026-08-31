@@ -75,6 +75,21 @@ export function useInertiaDataTable<TData>({
         [page.url],
     );
 
+    // Every `filter[*]` param except the search key drives the filter card.
+    const filters = useMemo(() => {
+        const out: Record<string, string> = {};
+
+        for (const [key, value] of queryString(page.url).entries()) {
+            const match = key.match(/^filter\[(.+)\]$/);
+
+            if (match && match[1] !== filterKey) {
+                out[match[1]] = value;
+            }
+        }
+
+        return out;
+    }, [page.url, filterKey]);
+
     const fieldToColumn = useMemo(() => {
         const inverse: Record<string, string> = {};
 
@@ -126,8 +141,14 @@ export function useInertiaDataTable<TData>({
     const currentParams = useCallback((): QueryParams => {
         const params: QueryParams = {};
 
+        const filter: Record<string, string> = { ...filters };
+
         if (searchValue !== '') {
-            params.filter = { [filterKey]: searchValue };
+            filter[filterKey] = searchValue;
+        }
+
+        if (Object.keys(filter).length > 0) {
+            params.filter = filter;
         }
 
         if (sortParam !== '') {
@@ -135,7 +156,7 @@ export function useInertiaDataTable<TData>({
         }
 
         return params;
-    }, [searchValue, sortParam, filterKey]);
+    }, [filters, searchValue, sortParam, filterKey]);
 
     const visit = useCallback(
         (
@@ -199,14 +220,42 @@ export function useInertiaDataTable<TData>({
         setOverride(value);
 
         const params = currentParams();
+        const filter =
+            value === '' ? { ...filters } : { ...filters, [filterKey]: value };
 
-        if (value === '') {
-            delete params.filter;
+        if (Object.keys(filter).length > 0) {
+            params.filter = filter;
         } else {
-            params.filter = { [filterKey]: value };
+            delete params.filter;
         }
 
         visit(params, { debounce: true, replace: true });
+    };
+
+    const setFilters = (next: Record<string, string>) => {
+        const filter: Record<string, string> = {};
+
+        for (const [key, value] of Object.entries(next)) {
+            if (value !== '') {
+                filter[key] = value;
+            }
+        }
+
+        if (searchValue !== '') {
+            filter[filterKey] = searchValue;
+        }
+
+        const params: QueryParams = {};
+
+        if (Object.keys(filter).length > 0) {
+            params.filter = filter;
+        }
+
+        if (sortParam !== '') {
+            params.sort = sortParam;
+        }
+
+        visit(params);
     };
 
     return {
@@ -220,5 +269,7 @@ export function useInertiaDataTable<TData>({
         onPaginationChange,
         globalFilter: searchValue,
         onGlobalFilterChange,
+        filters,
+        setFilters,
     };
 }
