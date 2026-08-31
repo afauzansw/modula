@@ -3,6 +3,7 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\Category;
+use Illuminate\Support\Collection;
 
 /**
  * Course-category management for the admin dashboard. Inherits the base
@@ -15,4 +16,11 @@ use App\Models\Category;
 interface CategoryRepositoryInterface extends BaseRepositoryInterface
 {
     public function findBySlug(string $slug): ?Category;
+
+    /**
+     * Every category as `{id, name}`, ordered by name — for select inputs.
+     *
+     * @return Collection<int, array{id: int, name: string}>
+     */
+    public function options(): Collection;
 }

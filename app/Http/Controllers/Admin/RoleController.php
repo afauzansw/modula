@@ -9,11 +9,8 @@ use App\Http\Requests\Admin\StoreRoleRequest;
 use App\Http\Requests\Admin\UpdateRoleRequest;
 use App\Models\Role;
 use App\Repositories\Contracts\RoleRepositoryInterface;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,20 +29,18 @@ class RoleController extends Controller
      * Driven by the request's `filter` / `sort` / `page` query params through
      * the repository's query builder.
      */
-    public function fetch(Request $request): JsonResponse
+    public function fetch(): JsonResponse
     {
-        $request->merge(['include' => 'permissions']);
-
         $roles = $this->roles->all();
 
-        $data = [];
+        $rows = [];
 
         foreach ($roles->items() as $role) {
             if (! $role instanceof Role) {
                 continue;
             }
 
-            $data[] = [
+            $rows[] = [
                 'id' => $role->id,
                 'name' => $role->name,
                 'is_system' => $role->is_system,
@@ -53,14 +48,7 @@ class RoleController extends Controller
             ];
         }
 
-        return response()->json([
-            'data' => $data,
-            'current_page' => $roles->currentPage(),
-            'last_page' => $roles->lastPage(),
-            'per_page' => $roles->perPage(),
-            'total' => $roles->total(),
-            'links' => $this->paginationLinks($roles),
-        ]);
+        return $this->paginatedJson($roles, $rows);
     }
 
     /**
@@ -117,27 +105,5 @@ class RoleController extends Controller
         ]);
 
         return redirect()->route('admin.roles.index');
-    }
-
-    /**
-     * Build the {url,label,active} link list the frontend paginator expects,
-     * using only the paginator contract's declared methods.
-     *
-     * @param  LengthAwarePaginator<int, Model>  $paginator
-     * @return list<array{url: ?string, label: string, active: bool}>
-     */
-    private function paginationLinks(LengthAwarePaginator $paginator): array
-    {
-        $links = [
-            ['url' => $paginator->previousPageUrl(), 'label' => '&laquo; Previous', 'active' => false],
-        ];
-
-        foreach ($paginator->getUrlRange(1, $paginator->lastPage()) as $page => $url) {
-            $links[] = ['url' => $url, 'label' => (string) $page, 'active' => $page === $paginator->currentPage()];
-        }
-
-        $links[] = ['url' => $paginator->nextPageUrl(), 'label' => 'Next &raquo;', 'active' => false];
-
-        return $links;
     }
 }

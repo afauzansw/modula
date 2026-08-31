@@ -28,6 +28,9 @@ class EloquentRoleRepository extends BaseRepository implements RoleRepositoryInt
     /** @var list<string> */
     protected array $allowedIncludes = ['permissions'];
 
+    /** @var list<string> */
+    protected array $with = ['permissions'];
+
     public function __construct(Role $model)
     {
         parent::__construct($model);

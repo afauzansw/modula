@@ -37,3 +37,13 @@ test('all() filters by name and eager-loads the course count', function () {
     expect($page->total())->toBe(1)
         ->and($page->items()[0]->courses_count)->toBe(2);
 });
+
+test('options() returns every category as {id, name} ordered by name', function () {
+    Category::factory()->create(['name' => 'Zeta']);
+    Category::factory()->create(['name' => 'Alpha']);
+
+    $options = categoryRepo()->options();
+
+    expect($options->pluck('name')->all())->toBe(['Alpha', 'Zeta'])
+        ->and($options->first())->toHaveKeys(['id', 'name']);
+});

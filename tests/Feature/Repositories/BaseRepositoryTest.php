@@ -19,6 +19,9 @@ class UserTestRepository extends BaseRepository
     /** @var list<string> */
     protected array $allowedSorts = ['name', 'created_at'];
 
+    /** @var list<string> */
+    protected array $with = ['roles'];
+
     public function __construct(User $model)
     {
         parent::__construct($model);
@@ -77,6 +80,12 @@ test('all() applies forced $filters on top of the query', function () {
 
     expect($page->total())->toBe(1)
         ->and($page->items()[0]->email)->toBe('keep@example.com');
+});
+
+test('all() eager-loads the repository $with relations on every row', function () {
+    User::factory()->count(2)->create();
+
+    expect(userRepo()->all()->items()[0]->relationLoaded('roles'))->toBeTrue();
 });
 
 test('all() applies query-string filters through Spatie Query Builder', function () {

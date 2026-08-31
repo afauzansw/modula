@@ -46,6 +46,15 @@ abstract class BaseRepository implements BaseRepositoryInterface
      */
     protected array $allowedIncludes = [];
 
+    /**
+     * Relations eager-loaded on every `all()` call, regardless of the request —
+     * for relations the listing always needs (vs `$allowedIncludes`, which is
+     * opt-in per request). `?include=` still adds more on top.
+     *
+     * @var list<string>
+     */
+    protected array $with = [];
+
     public function __construct(Model $model)
     {
         $this->model = $model;
@@ -57,7 +66,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
      */
     public function all(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $base = $this->model->newQuery();
+        $base = $this->model->newQuery()->with($this->with);
 
         foreach ($filters as $column => $value) {
             is_array($value)
