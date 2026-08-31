@@ -99,10 +99,11 @@ export default function RolesIndex() {
             <Head title="Roles & Permissions" />
 
             <div className="space-y-6 p-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-4">
                     <Heading
                         title="Roles & Permissions"
                         description="Manage custom admin roles and the permissions they carry"
+                        className="mb-0"
                     />
                     <RoleFormDialog trigger={<Button>New role</Button>} />
                 </div>
