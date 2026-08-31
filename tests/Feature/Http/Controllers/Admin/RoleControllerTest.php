@@ -26,56 +26,82 @@ test('a user without the admin.roles permission is forbidden', function () {
     $this->actingAs($user)->get(route('admin.roles.index'))->assertForbidden();
 });
 
-test('the index page lists roles with their permission names', function () {
-    $user = adminUser();
-    $role = Role::query()->create(['name' => 'Support', 'guard_name' => 'web', 'is_system' => false]);
-    $role->syncPermissions([AdminPermission::Users->value]);
-
-    $this->actingAs($user)
+test('the index page renders the shell without role data', function () {
+    $this->actingAs(adminUser())
         ->get(route('admin.roles.index'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('admin/roles/index')
-            ->where('roles.data', fn ($data) => collect($data)->contains(
-                fn ($item) => $item['name'] === 'Support' && $item['permissions'] === [AdminPermission::Users->value],
-            )),
+            ->missing('roles'),
         );
 });
 
-test('the index page filters roles by a partial name match', function () {
-    $user = adminUser();
+test('fetch returns roles with their permission names as json', function () {
+    $role = Role::query()->create(['name' => 'Support', 'guard_name' => 'web', 'is_system' => false]);
+    $role->syncPermissions([AdminPermission::Users->value]);
+
+    $data = $this->actingAs(adminUser())
+        ->getJson(route('admin.roles.fetch'))
+        ->assertOk()
+        ->json('data');
+
+    expect(collect($data)->firstWhere('name', 'Support'))
+        ->toMatchArray(['permissions' => [AdminPermission::Users->value]]);
+});
+
+test('fetch filters roles by a partial name match', function () {
     Role::query()->create(['name' => 'Support Team', 'guard_name' => 'web', 'is_system' => false]);
     Role::query()->create(['name' => 'Billing', 'guard_name' => 'web', 'is_system' => false]);
 
-    $this->actingAs($user)
-        ->get(route('admin.roles.index', ['filter' => ['name' => 'supp']]))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('roles.data', fn ($data) => collect($data)->pluck('name')->all() === ['Support Team']),
-        );
+    $data = $this->actingAs(adminUser())
+        ->getJson(route('admin.roles.fetch', ['filter' => ['name' => 'supp']]))
+        ->assertOk()
+        ->json('data');
+
+    expect(collect($data)->pluck('name')->all())->toBe(['Support Team']);
 });
 
-test('the index page sorts roles by name', function () {
-    $user = adminUser();
+test('fetch sorts roles by name', function () {
     Role::query()->create(['name' => 'Zeta', 'guard_name' => 'web', 'is_system' => false]);
     Role::query()->create(['name' => 'Alpha', 'guard_name' => 'web', 'is_system' => false]);
 
-    $this->actingAs($user)
-        ->get(route('admin.roles.index', ['sort' => 'name']))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('roles.data', function ($data) {
-                $names = collect($data)->pluck('name');
+    $data = $this->actingAs(adminUser())
+        ->getJson(route('admin.roles.fetch', ['sort' => 'name']))
+        ->assertOk()
+        ->json('data');
 
-                return $names->search('Alpha') < $names->search('Zeta');
-            }),
-        );
+    $names = collect($data)->pluck('name');
+
+    expect($names->search('Alpha'))->toBeLessThan($names->search('Zeta'));
+});
+
+test('fetch requires the admin.roles permission', function () {
+    $this->actingAs(User::factory()->create())
+        ->getJson(route('admin.roles.fetch'))
+        ->assertForbidden();
+});
+
+test('guests cannot fetch roles', function () {
+    $this->getJson(route('admin.roles.fetch'))->assertUnauthorized();
+});
+
+test('permissions returns the admin permission catalogue as json', function () {
+    $this->actingAs(adminUser())
+        ->getJson(route('admin.roles.permissions'))
+        ->assertOk()
+        ->assertJsonCount(count(AdminPermission::values()))
+        ->assertJsonFragment([AdminPermission::Roles->value => 'Roles & Permissions']);
+});
+
+test('permissions requires the admin.roles permission', function () {
+    $this->actingAs(User::factory()->create())
+        ->getJson(route('admin.roles.permissions'))
+        ->assertForbidden();
 });
 
 test('the create page is displayed', function () {
     $this->actingAs(adminUser())
         ->get(route('admin.roles.create'))
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('admin/roles/create')
-            ->has('permissions'),
-        );
+        ->assertInertia(fn (Assert $page) => $page->component('admin/roles/create'));
 });
 
 test('store creates a custom role with the given permissions', function () {
@@ -111,6 +137,20 @@ test('store rejects a duplicate role name', function () {
     $this->actingAs(adminUser())
         ->post(route('admin.roles.store'), ['name' => 'Support', 'permissions' => []])
         ->assertInvalid(['name']);
+});
+
+test('the edit page renders the role without the permission catalogue', function () {
+    $role = Role::query()->create(['name' => 'Support', 'guard_name' => 'web', 'is_system' => false]);
+    $role->syncPermissions([AdminPermission::Users->value]);
+
+    $this->actingAs(adminUser())
+        ->get(route('admin.roles.edit', $role))
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('admin/roles/edit')
+            ->where('role.name', 'Support')
+            ->where('role.permissions', [AdminPermission::Users->value])
+            ->missing('permissions'),
+        );
 });
 
 test('editing a system role is forbidden', function () {

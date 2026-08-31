@@ -4,7 +4,8 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import type { ColumnDef, Row, RowSelectionState } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
     Table,
@@ -17,6 +18,37 @@ import {
 import { cn } from '@/lib/utils';
 import { DataTablePagination } from './data-table-pagination';
 import type { DataTableSource } from './types';
+
+/** Leading checkbox column — prepended by `<DataTable canSelect>`. */
+function selectColumn<TData, TValue>(): ColumnDef<TData, TValue> {
+    return {
+        id: 'select',
+        enableSorting: false,
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected()
+                        ? true
+                        : table.getIsSomePageRowsSelected()
+                          ? 'indeterminate'
+                          : false
+                }
+                onCheckedChange={(value) =>
+                    table.toggleAllPageRowsSelected(value === true)
+                }
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                disabled={!row.getCanSelect()}
+                onCheckedChange={(value) => row.toggleSelected(value === true)}
+                aria-label="Select row"
+            />
+        ),
+    };
+}
 
 type SelectionActionsContext<TData> = {
     /** Selected row ids (as strings — `getRowId` stringifies `row.id`). */
@@ -31,8 +63,11 @@ type DataTableProps<TData extends { id: number | string }, TValue> = {
     source: DataTableSource<TData>;
     searchPlaceholder?: string;
     emptyMessage?: string;
-    /** `true` for every row, or a predicate to make some rows unselectable. */
-    enableRowSelection?: boolean | ((row: TData) => boolean);
+    /**
+     * Prepend a checkbox column for row selection. `true` selects every row; a
+     * predicate makes some rows unselectable (their checkbox is disabled).
+     */
+    canSelect?: boolean | ((row: TData) => boolean);
     /** Toolbar content shown while ≥1 row is selected (e.g. a bulk action). */
     renderSelectionActions?: (
         ctx: SelectionActionsContext<TData>,
@@ -44,7 +79,7 @@ export function DataTable<TData extends { id: number | string }, TValue>({
     source,
     searchPlaceholder = 'Search…',
     emptyMessage = 'No results.',
-    enableRowSelection,
+    canSelect,
     renderSelectionActions,
 }: DataTableProps<TData, TValue>) {
     // TanStack Table v8 mutates one long-lived `table` object rather than
@@ -54,10 +89,16 @@ export function DataTable<TData extends { id: number | string }, TValue>({
 
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
+    const tableColumns = useMemo(
+        () =>
+            canSelect ? [selectColumn<TData, TValue>(), ...columns] : columns,
+        [canSelect, columns],
+    );
+
     // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
         data: source.data,
-        columns,
+        columns: tableColumns,
         pageCount: source.pageCount,
         rowCount: source.rowCount,
         state: {
@@ -67,9 +108,9 @@ export function DataTable<TData extends { id: number | string }, TValue>({
         },
         getRowId: (row) => String(row.id),
         enableRowSelection:
-            typeof enableRowSelection === 'function'
-                ? (row: Row<TData>) => enableRowSelection(row.original)
-                : enableRowSelection,
+            typeof canSelect === 'function'
+                ? (row: Row<TData>) => canSelect(row.original)
+                : canSelect,
         manualPagination: true,
         manualSorting: true,
         manualFiltering: true,
@@ -136,10 +177,12 @@ export function DataTable<TData extends { id: number | string }, TValue>({
                         {rows.length === 0 ? (
                             <TableRow>
                                 <TableCell
-                                    colSpan={columns.length}
+                                    colSpan={tableColumns.length}
                                     className="h-24 text-center text-muted-foreground"
                                 >
-                                    {emptyMessage}
+                                    {source.isLoading
+                                        ? 'Loading…'
+                                        : emptyMessage}
                                 </TableCell>
                             </TableRow>
                         ) : (

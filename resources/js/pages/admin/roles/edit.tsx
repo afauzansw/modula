@@ -2,22 +2,21 @@ import { Form, Head } from '@inertiajs/react';
 import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { PermissionCheckboxList } from '@/components/roles/permission-checkbox-list';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { usePermissionCatalogue } from '@/hooks/use-permission-catalogue';
 import { edit, index } from '@/routes/admin/roles';
+import type { RoleFormData } from '@/types';
 
 type Props = {
-    role: {
-        id: number;
-        name: string;
-        permissions: string[];
-    };
-    permissions: Record<string, string>;
+    role: RoleFormData;
 };
 
-export default function EditRole({ role, permissions }: Props) {
+export default function EditRole({ role }: Props) {
+    const { permissions, isLoading } = usePermissionCatalogue();
+
     return (
         <>
             <Head title={`Edit ${role.name}`} />
@@ -49,31 +48,11 @@ export default function EditRole({ role, permissions }: Props) {
 
                             <div className="grid gap-2">
                                 <Label>Permissions</Label>
-                                <div className="grid gap-2 rounded-lg border p-4">
-                                    {Object.entries(permissions).map(
-                                        ([value, label]) => (
-                                            <div
-                                                key={value}
-                                                className="flex items-center gap-2"
-                                            >
-                                                <Checkbox
-                                                    id={`permission-${value}`}
-                                                    name="permissions[]"
-                                                    value={value}
-                                                    defaultChecked={role.permissions.includes(
-                                                        value,
-                                                    )}
-                                                />
-                                                <Label
-                                                    htmlFor={`permission-${value}`}
-                                                    className="font-normal"
-                                                >
-                                                    {label}
-                                                </Label>
-                                            </div>
-                                        ),
-                                    )}
-                                </div>
+                                <PermissionCheckboxList
+                                    permissions={permissions}
+                                    isLoading={isLoading}
+                                    checkedValues={role.permissions}
+                                />
                                 <InputError message={errors.permissions} />
                             </div>
 

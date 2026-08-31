@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,7 +21,18 @@ class RoleController extends Controller
 {
     public function __construct(private readonly RoleRepositoryInterface $roles) {}
 
-    public function index(Request $request): Response
+    public function index(): Response
+    {
+        return Inertia::render('admin/roles/index');
+    }
+
+    /**
+     * The paginated role listing the DataTable pulls from — one
+     * {id,name,is_system,permissions} row per role plus the paginator meta.
+     * Driven by the request's `filter` / `sort` / `page` query params through
+     * the repository's query builder.
+     */
+    public function fetch(Request $request): JsonResponse
     {
         $request->merge(['include' => 'permissions']);
 
@@ -41,23 +53,28 @@ class RoleController extends Controller
             ];
         }
 
-        return Inertia::render('admin/roles/index', [
-            'roles' => [
-                'data' => $data,
-                'current_page' => $roles->currentPage(),
-                'last_page' => $roles->lastPage(),
-                'per_page' => $roles->perPage(),
-                'total' => $roles->total(),
-                'links' => $this->paginationLinks($roles),
-            ],
+        return response()->json([
+            'data' => $data,
+            'current_page' => $roles->currentPage(),
+            'last_page' => $roles->lastPage(),
+            'per_page' => $roles->perPage(),
+            'total' => $roles->total(),
+            'links' => $this->paginationLinks($roles),
         ]);
+    }
+
+    /**
+     * The admin-permission catalogue (name => label) the role form renders its
+     * checkboxes from. Code-defined; see {@see AdminPermission}.
+     */
+    public function permissions(): JsonResponse
+    {
+        return response()->json(AdminPermission::labels());
     }
 
     public function create(): Response
     {
-        return Inertia::render('admin/roles/create', [
-            'permissions' => AdminPermission::labels(),
-        ]);
+        return Inertia::render('admin/roles/create');
     }
 
     public function store(StoreRoleRequest $request): RedirectResponse
@@ -79,7 +96,6 @@ class RoleController extends Controller
                 'name' => $role->name,
                 'permissions' => $role->permissions->pluck('name')->all(),
             ],
-            'permissions' => AdminPermission::labels(),
         ]);
     }
 
