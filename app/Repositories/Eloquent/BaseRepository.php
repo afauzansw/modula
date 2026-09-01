@@ -3,12 +3,15 @@
 namespace App\Repositories\Eloquent;
 
 use App\Repositories\Contracts\BaseRepositoryInterface;
+use App\Repositories\LoadQuery;
+use App\Repositories\PaginateQuery;
+use App\Repositories\SpatieQuery;
 use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use Illuminate\Support\Facades\DB;
 use Spatie\QueryBuilder\AllowedFilter;
-use Spatie\QueryBuilder\AllowedInclude;
 use Spatie\QueryBuilder\AllowedSort;
 use Spatie\QueryBuilder\QueryBuilder;
 
@@ -39,12 +42,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
      */
     protected array $allowedSorts = [];
 
-    /**
-     * Relations eager-loadable via `?include=` on the listing endpoint.
-     *
-     * @var list<string|AllowedInclude>
-     */
-    protected array $allowedIncludes = [];
+    protected array $fileKeys = [];
 
     /**
      * Relations eager-loaded on every `all()` call, regardless of the request —
@@ -61,25 +59,30 @@ abstract class BaseRepository implements BaseRepositoryInterface
     }
 
     /**
-     * @param  array<string, mixed>  $filters
      * @return LengthAwarePaginator<int, Model>
      */
-    public function all(array $filters = [], int $perPage = 15): LengthAwarePaginator
-    {
-        $base = $this->model->newQuery()->with($this->with);
+    public function all(
+        SpatieQuery $scope = new SpatieQuery,
+        LoadQuery $load = new LoadQuery,
+        PaginateQuery $paginate = new PaginateQuery,
+    ): LengthAwarePaginator {
+        $base = $this->model->newQuery()->with([...$this->with, ...$load->with]);
 
-        foreach ($filters as $column => $value) {
-            is_array($value)
-                ? $base->whereIn($column, $value)
-                : $base->where($column, $value);
+        if ($load->select !== []) {
+            $base->select($load->select);
         }
 
-        return QueryBuilder::for($base)
-            ->allowedFilters(...$this->allowedFilters)
-            ->allowedSorts(...$this->allowedSorts)
-            ->allowedIncludes(...$this->allowedIncludes)
-            ->paginate($perPage)
-            ->appends(request()->query());
+        $query = QueryBuilder::for($base)
+            ->allowedFilters(...($scope->filters ?? $this->allowedFilters))
+            ->allowedSorts(...($scope->sorts ?? $this->allowedSorts));
+
+        if ($paginate->withPaginate) {
+            return $query->paginate($paginate->perPage)->appends(request()->query());
+        }
+
+        $rows = $query->get();
+
+        return new Paginator($rows, $rows->count(), max(1, $rows->count()), 1);
     }
 
     public function find(int $id): ?Model
@@ -97,8 +100,32 @@ abstract class BaseRepository implements BaseRepositoryInterface
      */
     public function create(array $data): Model
     {
-        return $this->model->newQuery()->create($data);
+        return DB::transaction(function () use ($data): Model {
+
+            $model = $this->model->newQuery()->create($data);
+
+            foreach ($this->fileKeys as $fileKey) {
+                $model->addMultipleMediaFromRequest([$fileKey])
+                    ->each(function ($image) use ($fileKey) {
+                        $image->toMediaCollection($fileKey);
+                    });
+            }
+
+            $this->afterCreate($model, $data);
+
+            return $model;
+        });
     }
+
+    /**
+     * Hook fired inside create()'s transaction, right after the row is inserted
+     * (and any $fileKeys media attached). Override in a concrete repository to
+     * persist related records from the same $data payload — e.g. sync a pivot
+     * or create child rows. No-op by default.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function afterCreate(Model $model, array $data): void {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -108,9 +135,20 @@ abstract class BaseRepository implements BaseRepositoryInterface
         return DB::transaction(function () use ($model, $data): Model {
             $model->update($data);
 
+            $this->afterUpdate($model, $data);
+
             return $model;
         });
     }
+
+    /**
+     * Hook fired inside update()'s transaction, right after the row is saved.
+     * Override in a concrete repository to persist related records from the
+     * same $data payload — e.g. re-sync a pivot. No-op by default.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function afterUpdate(Model $model, array $data): void {}
 
     /**
      * Mass-update every row matching $conditions. Supported condition forms:

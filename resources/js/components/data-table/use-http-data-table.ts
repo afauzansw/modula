@@ -50,7 +50,7 @@ export function useHttpDataTable<TData>({
     filterKey,
     sortFields = {},
     debounceMs = 300,
-    fallbackPageSize = 15,
+    fallbackPageSize = 10,
 }: UseHttpDataTableOptions): DataTableSource<TData> {
     const page = usePage();
     const { get, processing } = useHttp<

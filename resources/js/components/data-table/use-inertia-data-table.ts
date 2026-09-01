@@ -113,7 +113,7 @@ export function useInertiaDataTable<TData>({
 
     const pagination: PaginationState = {
         pageIndex: Math.max(0, (paginated.current_page ?? 1) - 1),
-        pageSize: paginated.per_page ?? 15,
+        pageSize: paginated.per_page ?? 10,
     };
 
     // The search box shows `override` while a debounced reload is pending, then

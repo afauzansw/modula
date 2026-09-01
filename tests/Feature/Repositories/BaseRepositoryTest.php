@@ -3,6 +3,8 @@
 use App\Models\User;
 use App\Repositories\Eloquent\BaseRepository;
 use App\Repositories\Eloquent\EloquentAuthRepository;
+use App\Repositories\PaginateQuery;
+use App\Repositories\SpatieQuery;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -62,24 +64,50 @@ test('update() persists changes and returns the model', function () {
         ->and($user->fresh()->name)->toBe('After');
 });
 
-test('all() returns a paginator and honours perPage', function () {
+test('all() returns a paginator and honours PaginateQuery perPage', function () {
     collect(range(1, 5))->map(fn () => createUser());
 
-    $page = userRepo()->all(perPage: 2);
+    $page = userRepo()->all(paginate: new PaginateQuery(perPage: 2));
 
     expect($page)->toBeInstanceOf(LengthAwarePaginator::class)
         ->and($page->perPage())->toBe(2)
-        ->and($page->total())->toBe(5);
+        ->and($page->total())->toBe(5)
+        ->and($page->lastPage())->toBe(3);
 });
 
-test('all() applies forced $filters on top of the query', function () {
+test('all() with withPaginate: false puts every row on a single page', function () {
+    collect(range(1, 5))->map(fn () => createUser());
+
+    $page = userRepo()->all(paginate: new PaginateQuery(withPaginate: false));
+
+    expect($page->total())->toBe(5)
+        ->and($page->lastPage())->toBe(1)
+        ->and($page->items())->toHaveCount(5);
+});
+
+test('all() applies SpatieQuery filters on top of the query', function () {
     createUser(['email' => 'keep@example.com']);
     collect(range(1, 3))->map(fn () => createUser());
 
-    $page = userRepo()->all(['email' => 'keep@example.com']);
+    $page = userRepo()->all(new SpatieQuery(filters: ['email' => 'keep@example.com']));
 
     expect($page->total())->toBe(1)
         ->and($page->items()[0]->email)->toBe('keep@example.com');
+});
+
+test('all() applies SpatieQuery sorts, and they win over the request sort', function () {
+    createUser(['name' => 'Mid', 'email' => 'b@example.com']);
+    createUser(['name' => 'Mid', 'email' => 'a@example.com']);
+    createUser(['name' => 'Zzz', 'email' => 'c@example.com']);
+
+    // request asks for name asc; the scope forces email desc first
+    $this->app->instance('request', Request::create('/', 'GET', ['sort' => 'name']));
+
+    $emails = collect(userRepo()->all(new SpatieQuery(sorts: ['-email']))->items())
+        ->pluck('email')
+        ->all();
+
+    expect($emails)->toBe(['c@example.com', 'b@example.com', 'a@example.com']);
 });
 
 test('all() eager-loads the repository $with relations on every row', function () {

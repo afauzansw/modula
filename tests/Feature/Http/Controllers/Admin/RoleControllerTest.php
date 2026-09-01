@@ -216,15 +216,15 @@ test('bulk destroy deletes every selected custom role', function () {
     expect(Role::query()->whereIn('id', [$first->id, $second->id])->count())->toBe(0);
 });
 
-test('bulk destroy leaves system roles in the selection untouched', function () {
+test('bulk destroy rejects a selection containing a system role and deletes nothing', function () {
     $custom = Role::query()->create(['name' => 'Temp', 'guard_name' => 'web', 'is_system' => false]);
     $admin = Role::findByName('admin');
 
     $this->actingAs(adminUser())
         ->delete(route('admin.roles.bulk-destroy'), ['ids' => [$custom->id, $admin->id]])
-        ->assertRedirect(route('admin.roles.index'));
+        ->assertInvalid(['ids.1']);
 
-    expect(Role::query()->where('id', $custom->id)->exists())->toBeFalse()
+    expect(Role::query()->where('id', $custom->id)->exists())->toBeTrue()
         ->and(Role::query()->where('id', $admin->id)->exists())->toBeTrue();
 });
 

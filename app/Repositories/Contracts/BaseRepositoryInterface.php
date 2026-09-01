@@ -2,6 +2,9 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Repositories\LoadQuery;
+use App\Repositories\PaginateQuery;
+use App\Repositories\SpatieQuery;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,12 +16,19 @@ interface BaseRepositoryInterface
 {
     /**
      * Paginated, filterable, sortable listing driven by the request query string
-     * (`?filter[...]=`, `?sort=`, `?include=`) plus any forced $filters.
+     * (`?filter[...]=`, `?sort=`, `?include=`) plus:
+     * - `$scope` — forced `where` / `orderBy` constraints (applied before, and
+     *   not overridable by, the request);
+     * - `$paginate` — page size, or `withPaginate: false` for a single page;
+     * - `$load` — extra eager-loaded relations and a forced column `select`.
      *
-     * @param  array<string, mixed>  $filters
      * @return LengthAwarePaginator<int, Model>
      */
-    public function all(array $filters = [], int $perPage = 15): LengthAwarePaginator;
+    public function all(
+        SpatieQuery $scope = new SpatieQuery,
+        LoadQuery $load = new LoadQuery,
+        PaginateQuery $paginate = new PaginateQuery,
+    ): LengthAwarePaginator;
 
     public function find(int $id): ?Model;
 

@@ -95,13 +95,20 @@ organization only, not a URL or access-control boundary.
 `abstract`, implements `BaseRepositoryInterface`. Every Eloquent repository
 extends it and gets, for free:
 
-- **`all(array $filters = [], int $perPage = 15)`** — a listing built through
-  `Spatie\QueryBuilder`. Each concrete repository declares protected
-  `$allowedFilters` / `$allowedSorts` / `$allowedIncludes`, and every listing
+- **`all(SpatieQuery $scope = new SpatieQuery, PaginateQuery $paginate = new PaginateQuery)`**
+  — a listing built through `Spatie\QueryBuilder`, always returning a
+  `LengthAwarePaginator`. Each concrete repository declares protected
+  `$allowedFilters` / `$allowedSorts` / `$allowedIncludes` (what the *request*
+  may ask for) plus `$with` (relations always eager-loaded), and every listing
   endpoint then supports query-string filtering/sorting/pagination out of the
   box, e.g. `?filter[status]=published&sort=-created_at&page=2&include=modules`.
-  The `$filters` argument adds forced constraints on top (equality, or `whereIn`
-  for array values).
+  - `App\Repositories\SpatieQuery` carries **forced** caller constraints —
+    `filters` (equality, or `whereIn` for arrays) and `sorts` (`'-col'` = desc)
+    — applied to the base query before Spatie QB, so the request can neither
+    remove nor reorder them.
+  - `App\Repositories\PaginateQuery` sets `perPage` (default **10**);
+    `withPaginate: false` returns every matching row on a single page (the
+    `Paginated<T>` shape still holds).
 - **`find` / `findOrFail` / `create`**.
 - **`update(Model, array)`** and **`updateWhere(array $conditions, array $data)`**
   — both wrapped in `DB::transaction`. `updateWhere` conditions accept
