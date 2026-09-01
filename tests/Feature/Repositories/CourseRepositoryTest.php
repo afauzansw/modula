@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Category;
-use App\Models\Course;
 use App\Repositories\Contracts\CourseRepositoryInterface;
 use App\Repositories\Eloquent\EloquentCourseRepository;
 use Illuminate\Http\Request;
@@ -16,7 +14,9 @@ test('the course repository interface resolves to the Eloquent implementation', 
 });
 
 test('all() eager-loads category and instructor on every row', function () {
-    Course::factory()->count(2)->create();
+    foreach (range(1, 2) as $i) {
+        createCourse();
+    }
 
     $course = courseRepo()->all()->items()[0];
 
@@ -25,8 +25,8 @@ test('all() eager-loads category and instructor on every row', function () {
 });
 
 test('all() filters by title', function () {
-    Course::factory()->create(['title' => 'Advanced React Patterns']);
-    Course::factory()->create(['title' => 'Intro to Vue']);
+    createCourse(['title' => 'Advanced React Patterns']);
+    createCourse(['title' => 'Intro to Vue']);
 
     $this->app->instance('request', Request::create('/', 'GET', ['filter' => ['title' => 'react']]));
 
@@ -37,8 +37,10 @@ test('all() filters by title', function () {
 });
 
 test('all() filters by status', function () {
-    Course::factory()->published()->create();
-    Course::factory()->count(2)->create(); // draft
+    createCourse(['status' => 'published']);
+    foreach (range(1, 2) as $i) {
+        createCourse();
+    } // draft
 
     $this->app->instance('request', Request::create('/', 'GET', ['filter' => ['status' => 'published']]));
 
@@ -46,8 +48,10 @@ test('all() filters by status', function () {
 });
 
 test('all() filters by is_free with a real bool cast', function () {
-    Course::factory()->paid()->create();
-    Course::factory()->count(2)->create(); // free
+    createCourse(['is_free' => false, 'price' => 149_000]);
+    foreach (range(1, 2) as $i) {
+        createCourse();
+    } // free
 
     $this->app->instance('request', Request::create('/', 'GET', ['filter' => ['is_free' => '0']]));
 
@@ -55,9 +59,11 @@ test('all() filters by is_free with a real bool cast', function () {
 });
 
 test('all() filters by category_id', function () {
-    $category = Category::factory()->create();
-    Course::factory()->for($category)->create();
-    Course::factory()->count(2)->create();
+    $category = createCategory();
+    createCourse(['category_id' => $category->id]);
+    foreach (range(1, 2) as $i) {
+        createCourse();
+    }
 
     $this->app->instance('request', Request::create('/', 'GET', ['filter' => ['category_id' => $category->id]]));
 
@@ -65,8 +71,8 @@ test('all() filters by category_id', function () {
 });
 
 test('all() sorts by title', function () {
-    Course::factory()->create(['title' => 'Zeta Course']);
-    Course::factory()->create(['title' => 'Alpha Course']);
+    createCourse(['title' => 'Zeta Course']);
+    createCourse(['title' => 'Alpha Course']);
 
     $this->app->instance('request', Request::create('/', 'GET', ['sort' => 'title']));
 

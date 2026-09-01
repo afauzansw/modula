@@ -17,7 +17,11 @@ class CategorySeeder extends Seeder
             return;
         }
 
-        Category::factory()->create(['name' => 'Web Development', 'slug' => 'web-development']);
-        Category::factory()->create(['name' => 'Design', 'slug' => 'design']);
+        $now = now();
+
+        Category::query()->insert([
+            ['name' => 'Web Development', 'slug' => 'web-development', 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Design', 'slug' => 'design', 'created_at' => $now, 'updated_at' => $now],
+        ]);
     }
 }

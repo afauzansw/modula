@@ -50,7 +50,7 @@ test('register() then login() then profile() works end to end', function () {
 
 test('sendPasswordChangeOtp() stores an unused, unexpired code and dispatches the notification', function () {
     Notification::fake();
-    $user = User::factory()->create();
+    $user = createUser();
 
     authRepo()->sendPasswordChangeOtp($user->id);
 
@@ -66,8 +66,8 @@ test('sendPasswordChangeOtp() stores an unused, unexpired code and dispatches th
 });
 
 test('verifyOtpAndChangePassword() changes the password and consumes the code', function () {
-    $user = User::factory()->create(['password' => Hash::make('old-password')]);
-    $otp = OtpCode::factory()->for($user)->create(['code' => '123456']);
+    $user = createUser(['password' => Hash::make('old-password')]);
+    $otp = createOtpCode(['user_id' => $user->id, 'code' => '123456']);
 
     $result = authRepo()->verifyOtpAndChangePassword($user->id, '123456', 'brand-new-password');
 
@@ -77,8 +77,8 @@ test('verifyOtpAndChangePassword() changes the password and consumes the code', 
 });
 
 test('verifyOtpAndChangePassword() rejects a wrong code and changes nothing', function () {
-    $user = User::factory()->create(['password' => Hash::make('old-password')]);
-    OtpCode::factory()->for($user)->create(['code' => '123456']);
+    $user = createUser(['password' => Hash::make('old-password')]);
+    createOtpCode(['user_id' => $user->id, 'code' => '123456']);
 
     $result = authRepo()->verifyOtpAndChangePassword($user->id, '999999', 'attempted-password');
 
@@ -88,16 +88,16 @@ test('verifyOtpAndChangePassword() rejects a wrong code and changes nothing', fu
 });
 
 test('verifyOtpAndChangePassword() rejects an expired code and changes nothing', function () {
-    $user = User::factory()->create(['password' => Hash::make('old-password')]);
-    OtpCode::factory()->for($user)->expired()->create(['code' => '123456']);
+    $user = createUser(['password' => Hash::make('old-password')]);
+    createOtpCode(['user_id' => $user->id, 'code' => '123456', 'expires_at' => now()->subMinute()]);
 
     expect(authRepo()->verifyOtpAndChangePassword($user->id, '123456', 'attempted-password'))->toBeFalse()
         ->and(Hash::check('old-password', $user->fresh()->password))->toBeTrue();
 });
 
 test('verifyOtpAndChangePassword() rejects an already-used code', function () {
-    $user = User::factory()->create(['password' => Hash::make('old-password')]);
-    OtpCode::factory()->for($user)->used()->create(['code' => '123456']);
+    $user = createUser(['password' => Hash::make('old-password')]);
+    createOtpCode(['user_id' => $user->id, 'code' => '123456', 'used_at' => now()]);
 
     expect(authRepo()->verifyOtpAndChangePassword($user->id, '123456', 'attempted-password'))->toBeFalse();
 });

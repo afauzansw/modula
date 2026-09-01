@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\OtpCodeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -23,9 +21,6 @@ use Illuminate\Support\Carbon;
 #[Fillable(['user_id', 'code', 'expires_at', 'used_at'])]
 class OtpCode extends Model
 {
-    /** @use HasFactory<OtpCodeFactory> */
-    use HasFactory;
-
     /**
      * @return array<string, string>
      */

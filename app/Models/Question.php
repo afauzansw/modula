@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\QuestionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,9 +20,6 @@ use Illuminate\Support\Carbon;
 #[Fillable(['quiz_id', 'question_text', 'type', 'order'])]
 class Question extends Model
 {
-    /** @use HasFactory<QuestionFactory> */
-    use HasFactory;
-
     /**
      * @return array<string, string>
      */

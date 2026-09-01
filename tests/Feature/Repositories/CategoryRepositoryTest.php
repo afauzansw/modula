@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Category;
-use App\Models\Course;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use App\Repositories\Eloquent\EloquentCategoryRepository;
 use Illuminate\Http\Request;
@@ -16,16 +14,20 @@ test('the category repository interface resolves to the Eloquent implementation'
 });
 
 test('findBySlug() returns the matching category or null', function () {
-    $category = Category::factory()->create(['slug' => 'findable']);
+    $category = createCategory(['slug' => 'findable']);
 
     expect(categoryRepo()->findBySlug('findable')->is($category))->toBeTrue()
         ->and(categoryRepo()->findBySlug('missing'))->toBeNull();
 });
 
 test('all() filters by name and eager-loads the course count', function () {
-    $needle = Category::factory()->create(['name' => 'Needle']);
-    Course::factory()->count(2)->for($needle)->create();
-    Category::factory()->count(2)->create();
+    $needle = createCategory(['name' => 'Needle']);
+    foreach (range(1, 2) as $i) {
+        createCourse(['category_id' => $needle->id]);
+    }
+    foreach (range(1, 2) as $i) {
+        createCategory();
+    }
 
     $this->app->instance('request', Request::create('/', 'GET', [
         'filter' => ['name' => 'Needle'],
@@ -39,8 +41,8 @@ test('all() filters by name and eager-loads the course count', function () {
 });
 
 test('options() returns every category as {id, name} ordered by name', function () {
-    Category::factory()->create(['name' => 'Zeta']);
-    Category::factory()->create(['name' => 'Alpha']);
+    createCategory(['name' => 'Zeta']);
+    createCategory(['name' => 'Alpha']);
 
     $options = categoryRepo()->options();
 

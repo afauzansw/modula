@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 dataset('student mockup pages', [
@@ -14,7 +13,7 @@ test('guests are redirected to login', function (string $routeName) {
 })->with('student mockup pages');
 
 test('an authenticated user sees the mockup page', function (string $routeName, string $component) {
-    $user = User::factory()->create();
+    $user = createUser();
 
     $this->actingAs($user)
         ->get(route($routeName))

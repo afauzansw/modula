@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -16,14 +15,14 @@ test('guests are redirected to login', function (string $routeName) {
 })->with('instructor mockup pages');
 
 test('a non-instructor is forbidden', function (string $routeName) {
-    $user = User::factory()->create();
+    $user = createUser();
     $user->assignRole('student');
 
     $this->actingAs($user)->get(route($routeName))->assertForbidden();
 })->with('instructor mockup pages');
 
 test('an instructor sees the mockup page', function (string $routeName, string $component) {
-    $user = User::factory()->create();
+    $user = createUser();
     $user->assignRole('instructor');
 
     $this->actingAs($user)

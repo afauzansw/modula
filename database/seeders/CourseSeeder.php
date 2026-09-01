@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Course;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -15,37 +14,47 @@ use Illuminate\Support\Str;
  */
 class CourseSeeder extends Seeder
 {
+    use ResolvesSeededRecords;
+
     public function run(): void
     {
         if (Course::query()->exists()) {
             return;
         }
 
-        $instructor = User::query()->where('email', 'instructor@example.com')->firstOrFail();
-        $category = Category::query()->where('slug', 'web-development')->firstOrFail();
+        $now = now();
+        $instructorId = $this->userByEmail('instructor@example.com')->id;
+        $categoryId = Category::query()->where('slug', 'web-development')->firstOrFail()->id;
 
-        Course::factory()
-            ->for($instructor, 'instructor')
-            ->for($category, 'category')
-            ->published()
-            ->create([
+        Course::query()->insert([
+            [
+                'instructor_id' => $instructorId,
+                'category_id' => $categoryId,
                 'title' => 'Modern React From Scratch',
                 'slug' => Str::slug('Modern React From Scratch'),
-                'description' => fake()->paragraphs(2, true),
-                'is_free' => true,
+                'description' => 'Build production-grade React apps from first principles: components, hooks, state, routing, and data fetching.',
+                'thumbnail_path' => null,
                 'price' => 0,
-            ]);
-
-        Course::factory()
-            ->for($instructor, 'instructor')
-            ->for($category, 'category')
-            ->published()
-            ->create([
+                'is_free' => true,
+                'status' => 'published',
+                'certificate_template_path' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'instructor_id' => $instructorId,
+                'category_id' => $categoryId,
                 'title' => 'Laravel API Mastery',
                 'slug' => Str::slug('Laravel API Mastery'),
-                'description' => fake()->paragraphs(2, true),
-                'is_free' => false,
+                'description' => 'Design, build, and secure REST and JSON APIs with Laravel — resources, versioning, auth, and testing.',
+                'thumbnail_path' => null,
                 'price' => 249_000,
-            ]);
+                'is_free' => false,
+                'status' => 'published',
+                'certificate_template_path' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+        ]);
     }
 }

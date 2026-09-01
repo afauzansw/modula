@@ -5,3 +5,4 @@ Before planning or editing, find the row whose globs match the file's path and r
 | Applies to | Rule file |
 | --- | --- |
 | resources/js/components/data-table/** | .ai/rules/data-table.md |
+| tests/** · database/seeders/** · database/factories/** | .ai/rules/testing.md |

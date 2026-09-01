@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\AdminPermission;
-use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -12,7 +11,7 @@ test('/admin redirects to /admin/dashboard', function () {
 });
 
 test('a user with admin.dashboard can view the admin dashboard', function () {
-    $user = User::factory()->create();
+    $user = createUser();
     $user->givePermissionTo(AdminPermission::Dashboard->value);
 
     $this->actingAs($user)
@@ -21,7 +20,7 @@ test('a user with admin.dashboard can view the admin dashboard', function () {
 });
 
 test('a user without admin.dashboard is forbidden from the admin dashboard', function () {
-    $user = User::factory()->create();
+    $user = createUser();
 
     $this->actingAs($user)->get(route('admin.dashboard'))->assertForbidden();
 });
@@ -31,7 +30,7 @@ test('/instructor redirects to /instructor/dashboard', function () {
 });
 
 test('an instructor can view the instructor dashboard', function () {
-    $user = User::factory()->create();
+    $user = createUser();
     $user->assignRole('instructor');
 
     $this->actingAs($user)
@@ -40,7 +39,7 @@ test('an instructor can view the instructor dashboard', function () {
 });
 
 test('a non-instructor is forbidden from the instructor dashboard', function () {
-    $user = User::factory()->create();
+    $user = createUser();
     $user->assignRole('student');
 
     $this->actingAs($user)->get(route('instructor.dashboard'))->assertForbidden();

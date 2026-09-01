@@ -1,8 +1,6 @@
 <?php
 
 use App\Enums\AdminPermission;
-use App\Models\Category;
-use App\Models\Course;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -11,7 +9,7 @@ beforeEach(fn () => $this->seed(RolePermissionSeeder::class));
 
 function courseAdmin(): User
 {
-    $user = User::factory()->create();
+    $user = createUser();
     $user->givePermissionTo(AdminPermission::Courses->value);
 
     return $user;
@@ -22,7 +20,7 @@ test('guests are redirected to login', function () {
 });
 
 test('a user without the admin.courses permission is forbidden', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(createUser())
         ->get(route('admin.courses.index'))
         ->assertForbidden();
 });
@@ -37,9 +35,9 @@ test('the index page renders the shell without course data', function () {
 });
 
 test('fetch returns courses with instructor and category names as json', function () {
-    $instructor = User::factory()->create(['name' => 'Grace Hopper']);
-    $category = Category::factory()->create(['name' => 'Engineering']);
-    Course::factory()->for($instructor, 'instructor')->for($category)->create(['title' => 'Compilers']);
+    $instructor = createUser(['name' => 'Grace Hopper']);
+    $category = createCategory(['name' => 'Engineering']);
+    createCourse(['instructor_id' => $instructor->id, 'category_id' => $category->id, 'title' => 'Compilers']);
 
     $data = $this->actingAs(courseAdmin())
         ->getJson(route('admin.courses.fetch'))
@@ -51,7 +49,7 @@ test('fetch returns courses with instructor and category names as json', functio
 });
 
 test('fetch reports a null category for an uncategorised course', function () {
-    Course::factory()->create(['title' => 'Loose', 'category_id' => null]);
+    createCourse(['title' => 'Loose', 'category_id' => null]);
 
     $data = $this->actingAs(courseAdmin())
         ->getJson(route('admin.courses.fetch'))
@@ -62,8 +60,8 @@ test('fetch reports a null category for an uncategorised course', function () {
 });
 
 test('fetch filters courses by status', function () {
-    Course::factory()->published()->create(['title' => 'Live']);
-    Course::factory()->create(['title' => 'WIP']);
+    createCourse(['status' => 'published', 'title' => 'Live']);
+    createCourse(['title' => 'WIP']);
 
     $data = $this->actingAs(courseAdmin())
         ->getJson(route('admin.courses.fetch', ['filter' => ['status' => 'published']]))
@@ -74,8 +72,8 @@ test('fetch filters courses by status', function () {
 });
 
 test('fetch filters courses by access (is_free)', function () {
-    Course::factory()->paid()->create(['title' => 'Premium']);
-    Course::factory()->create(['title' => 'Gratis']);
+    createCourse(['is_free' => false, 'price' => 149_000, 'title' => 'Premium']);
+    createCourse(['title' => 'Gratis']);
 
     $data = $this->actingAs(courseAdmin())
         ->getJson(route('admin.courses.fetch', ['filter' => ['is_free' => '0']]))
@@ -86,9 +84,9 @@ test('fetch filters courses by access (is_free)', function () {
 });
 
 test('fetch filters courses by category', function () {
-    $category = Category::factory()->create();
-    Course::factory()->for($category)->create(['title' => 'Matched']);
-    Course::factory()->create(['title' => 'Other']);
+    $category = createCategory();
+    createCourse(['category_id' => $category->id, 'title' => 'Matched']);
+    createCourse(['title' => 'Other']);
 
     $data = $this->actingAs(courseAdmin())
         ->getJson(route('admin.courses.fetch', ['filter' => ['category_id' => $category->id]]))
@@ -99,8 +97,8 @@ test('fetch filters courses by category', function () {
 });
 
 test('fetch sorts courses by title', function () {
-    Course::factory()->create(['title' => 'Zebra']);
-    Course::factory()->create(['title' => 'Aardvark']);
+    createCourse(['title' => 'Zebra']);
+    createCourse(['title' => 'Aardvark']);
 
     $data = $this->actingAs(courseAdmin())
         ->getJson(route('admin.courses.fetch', ['sort' => 'title']))
@@ -113,7 +111,7 @@ test('fetch sorts courses by title', function () {
 });
 
 test('fetch requires the admin.courses permission', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(createUser())
         ->getJson(route('admin.courses.fetch'))
         ->assertForbidden();
 });
@@ -123,8 +121,8 @@ test('guests cannot fetch courses', function () {
 });
 
 test('categories returns every category as id/name json', function () {
-    Category::factory()->create(['name' => 'Design']);
-    Category::factory()->create(['name' => 'Business']);
+    createCategory(['name' => 'Design']);
+    createCategory(['name' => 'Business']);
 
     $data = $this->actingAs(courseAdmin())
         ->getJson(route('admin.courses.categories'))
@@ -136,7 +134,7 @@ test('categories returns every category as id/name json', function () {
 });
 
 test('categories requires the admin.courses permission', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(createUser())
         ->getJson(route('admin.courses.categories'))
         ->assertForbidden();
 });

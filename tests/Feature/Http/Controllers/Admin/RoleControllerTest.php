@@ -11,7 +11,7 @@ beforeEach(fn () => $this->seed(RolePermissionSeeder::class));
 
 function adminUser(): User
 {
-    $user = User::factory()->create();
+    $user = createUser();
     $user->givePermissionTo(AdminPermission::Roles->value);
 
     return $user;
@@ -22,7 +22,7 @@ test('guests are redirected to login', function () {
 });
 
 test('a user without the admin.roles permission is forbidden', function () {
-    $user = User::factory()->create();
+    $user = createUser();
 
     $this->actingAs($user)->get(route('admin.roles.index'))->assertForbidden();
 });
@@ -95,7 +95,7 @@ test('fetch filters roles by type', function () {
 });
 
 test('fetch requires the admin.roles permission', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(createUser())
         ->getJson(route('admin.roles.fetch'))
         ->assertForbidden();
 });
@@ -113,7 +113,7 @@ test('permissions returns the admin permission catalogue as json', function () {
 });
 
 test('permissions requires the admin.roles permission', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(createUser())
         ->getJson(route('admin.roles.permissions'))
         ->assertForbidden();
 });
@@ -229,7 +229,7 @@ test('bulk destroy leaves system roles in the selection untouched', function () 
 });
 
 test('bulk destroy requires the admin.roles permission', function () {
-    $this->actingAs(User::factory()->create())
+    $this->actingAs(createUser())
         ->delete(route('admin.roles.bulk-destroy'), ['ids' => [1]])
         ->assertForbidden();
 });

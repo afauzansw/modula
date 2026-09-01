@@ -54,7 +54,7 @@ test('create(), find() and findOrFail() round-trip a model', function () {
 });
 
 test('update() persists changes and returns the model', function () {
-    $user = User::factory()->create(['name' => 'Before']);
+    $user = createUser(['name' => 'Before']);
 
     $returned = userRepo()->update($user, ['name' => 'After']);
 
@@ -63,7 +63,7 @@ test('update() persists changes and returns the model', function () {
 });
 
 test('all() returns a paginator and honours perPage', function () {
-    User::factory()->count(5)->create();
+    collect(range(1, 5))->map(fn () => createUser());
 
     $page = userRepo()->all(perPage: 2);
 
@@ -73,8 +73,8 @@ test('all() returns a paginator and honours perPage', function () {
 });
 
 test('all() applies forced $filters on top of the query', function () {
-    User::factory()->create(['email' => 'keep@example.com']);
-    User::factory()->count(3)->create();
+    createUser(['email' => 'keep@example.com']);
+    collect(range(1, 3))->map(fn () => createUser());
 
     $page = userRepo()->all(['email' => 'keep@example.com']);
 
@@ -83,14 +83,14 @@ test('all() applies forced $filters on top of the query', function () {
 });
 
 test('all() eager-loads the repository $with relations on every row', function () {
-    User::factory()->count(2)->create();
+    collect(range(1, 2))->map(fn () => createUser());
 
     expect(userRepo()->all()->items()[0]->relationLoaded('roles'))->toBeTrue();
 });
 
 test('all() applies query-string filters through Spatie Query Builder', function () {
-    User::factory()->create(['name' => 'Needle']);
-    User::factory()->count(3)->create();
+    createUser(['name' => 'Needle']);
+    collect(range(1, 3))->map(fn () => createUser());
 
     $this->app->instance('request', Request::create('/', 'GET', ['filter' => ['name' => 'Needle']]));
 
@@ -98,8 +98,8 @@ test('all() applies query-string filters through Spatie Query Builder', function
 });
 
 test('updateWhere() updates matching rows in a transaction and returns the count', function () {
-    User::factory()->count(3)->create(['name' => 'Old']);
-    User::factory()->create(['name' => 'Other']);
+    collect(range(1, 3))->map(fn () => createUser(['name' => 'Old']));
+    createUser(['name' => 'Other']);
 
     $affected = userRepo()->updateWhere(['name' => 'Old'], ['name' => 'New']);
 
@@ -108,8 +108,8 @@ test('updateWhere() updates matching rows in a transaction and returns the count
 });
 
 test('updateWhere() supports closure conditions', function () {
-    User::factory()->create(['email' => 'a@example.com']);
-    User::factory()->create(['email' => 'b@example.com']);
+    createUser(['email' => 'a@example.com']);
+    createUser(['email' => 'b@example.com']);
 
     $affected = userRepo()->updateWhere(
         [fn (Builder $query) => $query->where('email', 'like', 'a@%')],
@@ -121,7 +121,7 @@ test('updateWhere() supports closure conditions', function () {
 });
 
 test('bulkUpdate() applies the data to the given ids in a transaction and returns the count', function () {
-    $users = User::factory()->count(4)->create(['name' => 'Unchanged']);
+    $users = collect(range(1, 4))->map(fn () => createUser(['name' => 'Unchanged']));
     $ids = $users->take(3)->pluck('id')->all();
 
     $affected = userRepo()->bulkUpdate($ids, ['name' => 'Bulk Updated']);
@@ -132,7 +132,7 @@ test('bulkUpdate() applies the data to the given ids in a transaction and return
 });
 
 test('bulkDelete() deletes the given ids in a transaction and returns the count', function () {
-    $users = User::factory()->count(4)->create();
+    $users = collect(range(1, 4))->map(fn () => createUser());
     $ids = $users->take(3)->pluck('id')->all();
 
     $deleted = userRepo()->bulkDelete($ids);

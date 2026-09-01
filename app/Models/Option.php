@@ -2,9 +2,7 @@
 
 namespace App\Models;
 
-use Database\Factories\OptionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -21,9 +19,6 @@ use Illuminate\Support\Carbon;
 #[Fillable(['question_id', 'option_text', 'is_correct', 'order'])]
 class Option extends Model
 {
-    /** @use HasFactory<OptionFactory> */
-    use HasFactory;
-
     /**
      * @return array<string, string>
      */

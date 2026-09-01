@@ -9,7 +9,7 @@ beforeEach(fn () => $this->seed(RolePermissionSeeder::class));
 
 function userWithPermission(string $permission): User
 {
-    $user = User::factory()->create();
+    $user = createUser();
     $user->givePermissionTo($permission);
 
     return $user;
@@ -30,7 +30,7 @@ test('guests are redirected to login', function (string $routeName) {
 })->with('admin mockup pages');
 
 test('a user without the matching permission is forbidden', function (string $routeName) {
-    $user = User::factory()->create();
+    $user = createUser();
 
     $this->actingAs($user)->get(route($routeName))->assertForbidden();
 })->with('admin mockup pages');

@@ -17,11 +17,19 @@ test('it seeds the three protected system roles', function () {
         ->and($roles->every(fn (Role $role) => $role->is_system))->toBeTrue();
 });
 
-test('it seeds the demo accounts with the right roles', function () {
+test('it seeds the demo accounts with the right roles, all verified', function () {
     expect(User::count())->toBe(5)
         ->and(User::role('instructor')->count())->toBe(1)
         ->and(User::role('student')->count())->toBe(2)
-        ->and(User::role('admin')->count())->toBe(1);
+        ->and(User::role('admin')->count())->toBe(1)
+        ->and(User::whereNull('email_verified_at')->count())->toBe(0);
+});
+
+test('the demo accounts can log in with the shared password', function () {
+    $this->post(route('login.store'), ['email' => 'admin@example.com', 'password' => 'password'])
+        ->assertRedirect();
+
+    $this->assertAuthenticated();
 });
 
 test('it builds a free and a paid published course owned by the instructor', function () {
