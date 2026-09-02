@@ -54,9 +54,8 @@ abstract class BaseRepository implements BaseRepositoryInterface
     protected array $fileKeys = [];
 
     /**
-     * Relations eager-loaded on every `all()` call, regardless of the request —
-     * for relations the listing always needs (vs `$allowedIncludes`, which is
-     * opt-in per request). `?include=` still adds more on top.
+     * Relations eager-loaded on every `all()` call — the ones the listing
+     * always needs. A caller adds more per call through `LoadQuery::$with`.
      *
      * @var list<string>
      */

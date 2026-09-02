@@ -6,12 +6,6 @@ use App\Models\Category;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
 use Illuminate\Support\Collection;
 
-/**
- * Course-category management for the admin dashboard. A thin BaseRepository
- * subclass: it inherits the CRUD/listing and adds only the slug lookup. Slug
- * derivation and uniqueness live upstream (form request / model), with the
- * `slug` unique index as the final backstop.
- */
 class EloquentCategoryRepository extends BaseRepository implements CategoryRepositoryInterface
 {
     /** @var list<string> */

@@ -1,6 +1,8 @@
 ---
 paths:
   - 'resources/js/components/data-table/**'
+  - 'resources/js/pages/admin/**'
+  - 'app/Http/Controllers/Admin/**'
 ---
 
 # Data Table
@@ -11,12 +13,30 @@ paths:
 - `useHttpDataTable` — data comes from a dedicated JSON endpoint via `useHttp`; search/sort/page live in the URL (`router.push`/`replace` client-side visits) and a `useEffect` keyed on the query string refetches. Use when the page action is `Inertia::render`-only and a sibling JSON action serves the rows.
 
 **This is the pattern for admin resource lists.** The page action is
-`Inertia::render`-only; a sibling `fetch()` returns the `Paginated<T>` JSON via
-the shared `Controller::paginatedJson($paginator, $rows)` helper (base
-`App\Http\Controllers\Controller`); row relations are always eager-loaded by
-`BaseRepository::$with` (a repo property — no `?include=` / `$request->merge`
-hack). Async filter options come from another sibling JSON action + a
-fetch-on-mount hook.
+`Inertia::render`-only; a sibling `fetch()` serves the rows as JSON.
+
+`fetch()` returns `response()->json($this->repo->all(...))` **directly** — the
+raw paginator. `useHttpDataTable` reads `data` / `last_page` / `total` /
+`per_page` straight off Laravel's paginator JSON, so no wrapper is needed and
+the rows are the models' own `toArray()` (`RoleController`, `CategoryController`).
+Only reach for the `foreach ($paginator->items() as $x) { ... }` +
+`$this->paginatedJson($paginator, $rows)` transform when a row needs a
+*flattened relation* or a *computed field* that isn't a plain column —
+`CourseController` flattens `instructor` / `category` to names and adds a
+`thumbnail` media URL.
+
+Row relations are eager-loaded by `BaseRepository::$with` (a repo property —
+no `?include=` / `$request->merge` hack; request-driven includes were removed).
+Async filter options come from another sibling JSON action + a fetch-on-mount hook.
+
+For create/edit, the resource has ONE `{Resource}FormDialog` modal (create
+when no row passed, edit when one is) on the index — no `create`/`edit`
+routes (`Route::resource(...)->except(['show', 'create', 'edit'])`) — plus
+`store`/`update`/`destroy`/`bulkDestroy` as plain redirect actions.
+`{Resource}Actions` holds the per-row Edit + Delete controls (a
+`<ConfirmDialog>` for delete); bulk delete is `<DataTable canSelect>` +
+`renderSelectionActions` wiring a `<ConfirmDialog form={...bulkDestroy.form()}
+fields={{ ids }}>`.
 
 - **Roles** (`Admin\RoleController`) — `fetch()` (roles) + `permissions()`
   (AdminPermission catalogue → `usePermissionCatalogue`). No `create`/`edit`
@@ -24,10 +44,19 @@ fetch-on-mount hook.
   `destroy` stay plain redirect actions. Components in
   `resources/js/pages/admin/roles/components/`, types in `resources/js/types/role.ts`.
 - **Courses** (`Admin\CourseController`) — read-only. `fetch()` (courses, each
-  row carrying `instructor` + `category` names) + `categories()`
-  (`{id,name}` → `useCourseCategories`). `EloquentCourseRepository` sets
-  `$with = ['category','instructor']`. Table + grid views only. Components in
-  `resources/js/pages/admin/courses/components/`, types in `resources/js/types/course.ts`.
+  row carrying `instructor` + `category` names + a `thumbnail` media URL) +
+  `categories()` (`{id,name}` → `useCourseCategories`). `EloquentCourseRepository`
+  sets `$with = ['category','instructor','media']`. Table + grid views only.
+  Components in `resources/js/pages/admin/courses/components/`, types in
+  `resources/js/types/course.ts`.
+- **Course Category** (`Admin\CategoryController`) — full CRUD. `fetch()`
+  returns the raw paginator (rows are the `Category` model itself — `name`,
+  `slug`). `CategoryFormDialog` has a name field only; the slug is derived
+  server-side in `CategoryRequest::prepareForValidation`. Search + bulk delete,
+  **no filter card, table view only** (no `renderCard` / `filters`).
+  `canSelect` with no predicate — every category is deletable. Components in
+  `resources/js/pages/admin/categories/components/`, types in
+  `resources/js/types/category.ts`.
 
 ## Row selection: the `canSelect` prop
 `<DataTable canSelect>` prepends the leading checkbox column itself — pages must not add a `{ id: 'select' }` column. `canSelect` is `boolean | ((row) => boolean)`: `true` selects every row, a predicate disables the checkbox on some rows (e.g. roles pass `(role) => !role.is_system`). Pair it with `renderSelectionActions` for the bulk-action toolbar. In the list/grid views the checkbox is overlaid on each card (cards should leave top-left room for it).
