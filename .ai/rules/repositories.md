@@ -64,6 +64,27 @@ have one (it inherited Spatie's `$guarded = []`, so an unlisted key like
 Adding a new hook that reads a relation key off `$data` means checking the
 target model has that key excluded from its `#[Fillable]` list.
 
+## Scoping a repository to a subset of a table — use a model, not a base override
+`BaseRepository` has no "forced constraint" hook, and adding one hits Eloquent
+generics: `BaseRepository::baseQuery(): Builder<Model>` can't be overridden to
+return `Builder<User>` (invariant `@template TModel`), and a `Builder<Model>`
+can't call `->whereHas('roles')` (the base `Model` has no relations).
+
+Instead, give the scope its own model: a thin subclass with `$table` pointing
+back at the real table and a `whereHas(...)` **global scope** — see
+`App\Models\Student` / `App\Models\Instructor` (`User` scoped to one role).
+The repository just declares `$model` as that subclass, and every inherited
+`all()` / `bulkUpdate()` / `bulkDelete()` picks the scope up through
+`$this->model->newQuery()` — including the safety property that a bulk status
+change can only touch rows of that role.
+
+- A role/permission-style morph link is stored against the parent
+  (`model_type = App\Models\User`), so the subclass must override
+  `getMorphClass()` to return the parent class or `whereHas('roles')` matches
+  nothing.
+- Shared listing config (allowed filters/sorts, a search callback) goes on an
+  abstract `Eloquent{X}RoleRepository` the concretes extend.
+
 ## Validation lives in Form Requests, not the repository
 A repository persists what it's given; it does not decide whether the input is
 valid. Reserved names, an enum/catalogue check, uniqueness, "refuse to touch

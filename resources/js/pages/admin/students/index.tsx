@@ -1,27 +1,16 @@
-import { Head } from '@inertiajs/react';
-import Heading from '@/components/heading';
-import { MockupTable } from '@/components/mockup-table';
+import StudentController from '@/actions/App/Http/Controllers/Admin/StudentController';
+import { UserDirectoryTable } from '@/components/user-directory-table';
 import { index } from '@/routes/admin/students';
 
 export default function StudentsIndex() {
     return (
-        <>
-            <Head title="Student" />
-            <div className="space-y-6 p-4">
-                <Heading
-                    title="Student"
-                    description="Students and their enrolled classes by payment status"
-                />
-                <MockupTable
-                    columns={[
-                        'Name',
-                        'Email',
-                        'Paid Classes',
-                        'Pending Classes',
-                    ]}
-                />
-            </div>
-        </>
+        <UserDirectoryTable
+            title="Student"
+            description="Students on the platform"
+            noun="student"
+            fetchUrl={StudentController.fetch.url()}
+            bulkStatusForm={StudentController.bulkUpdateStatus.form()}
+        />
     );
 }
 

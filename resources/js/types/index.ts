@@ -6,3 +6,4 @@ export type * from './pagination';
 export type * from './payment';
 export type * from './role';
 export type * from './ui';
+export type * from './user';

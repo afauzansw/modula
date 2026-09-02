@@ -65,6 +65,16 @@ fields={{ ids }}>`.
   / `paid_at`. **Table view only, no filter card, no selection.** Formatters in
   `resources/js/pages/admin/payments/lib/format.ts`, types in
   `resources/js/types/payment.ts`.
+- **Student / Instructor** (`Admin\StudentController`, `Admin\InstructorController`)
+  — one shared `<UserDirectoryTable>` component (name / email / status / joined,
+  searchable, table only). Each controller injects `Student{,Instructor}RepositoryInterface`;
+  the repos share `EloquentUserRoleRepository` (name/email `search` callback
+  filter) and are role-scoped by the **`Student` / `Instructor` models** — thin
+  `User` subclasses (`$table = 'users'`, `getMorphClass() → User::class`) with a
+  `whereHas('roles', …)` global scope. That scope also constrains
+  `bulkUpdate()`, so `bulkUpdateStatus` (block / unblock via `is_blocked`,
+  `PATCH .../status`) can only touch users of that role. `fetch()` returns the
+  raw paginator; types in `resources/js/types/user.ts`.
 
 ## Row selection: the `canSelect` prop
 `<DataTable canSelect>` prepends the leading checkbox column itself — pages must not add a `{ id: 'select' }` column. `canSelect` is `boolean | ((row) => boolean)`: `true` selects every row, a predicate disables the checkbox on some rows (e.g. roles pass `(role) => !role.is_system`). Pair it with `renderSelectionActions` for the bulk-action toolbar. In the list/grid views the checkbox is overlaid on each card (cards should leave top-left room for it).

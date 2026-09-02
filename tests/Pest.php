@@ -133,6 +133,20 @@ function createOrder(array $attributes = []): Order
 }
 
 /**
+ * A user assigned the given Spatie role. The role must already exist — seed
+ * RolePermissionSeeder first.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function createUserWithRole(string $role, array $attributes = []): User
+{
+    $user = createUser($attributes);
+    $user->assignRole($role);
+
+    return $user;
+}
+
+/**
  * A settled payment. Pass `order_id` to attach an existing order; otherwise a
  * paid order is created for it.
  *
