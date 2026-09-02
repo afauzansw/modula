@@ -20,14 +20,6 @@ class EloquentCategoryRepository extends BaseRepository implements CategoryRepos
     /** @var list<string> */
     protected array $allowedSorts = ['name', 'created_at'];
 
-    /**
-     * Allowing `courses` also enables the derived `coursesCount` /
-     * `coursesExists` includes — Spatie Query Builder appends them.
-     *
-     * @var list<string>
-     */
-    protected array $allowedIncludes = ['courses'];
-
     public function __construct(Category $model)
     {
         parent::__construct($model);

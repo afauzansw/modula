@@ -36,7 +36,7 @@ test('the index page renders the shell without role data', function () {
         );
 });
 
-test('fetch returns roles with their permission names as json', function () {
+test('fetch returns roles with their permissions as {id, name} objects', function () {
     $role = Role::query()->create(['name' => 'Support', 'guard_name' => 'web', 'is_system' => false]);
     $role->syncPermissions([AdminPermission::Users->value]);
 
@@ -45,8 +45,11 @@ test('fetch returns roles with their permission names as json', function () {
         ->assertOk()
         ->json('data');
 
-    expect(collect($data)->firstWhere('name', 'Support'))
-        ->toMatchArray(['permissions' => [AdminPermission::Users->value]]);
+    $support = collect($data)->firstWhere('name', 'Support');
+
+    expect($support['permissions'])->toHaveCount(1)
+        ->and($support['permissions'][0])->toHaveKeys(['id', 'name'])
+        ->and($support['permissions'][0]['name'])->toBe(AdminPermission::Users->value);
 });
 
 test('fetch filters roles by a partial name match', function () {
@@ -216,15 +219,15 @@ test('bulk destroy deletes every selected custom role', function () {
     expect(Role::query()->whereIn('id', [$first->id, $second->id])->count())->toBe(0);
 });
 
-test('bulk destroy leaves system roles in the selection untouched', function () {
+test('bulk destroy rejects a selection containing a system role and deletes nothing', function () {
     $custom = Role::query()->create(['name' => 'Temp', 'guard_name' => 'web', 'is_system' => false]);
     $admin = Role::findByName('admin');
 
     $this->actingAs(adminUser())
         ->delete(route('admin.roles.bulk-destroy'), ['ids' => [$custom->id, $admin->id]])
-        ->assertRedirect(route('admin.roles.index'));
+        ->assertInvalid(['ids.1']);
 
-    expect(Role::query()->where('id', $custom->id)->exists())->toBeFalse()
+    expect(Role::query()->where('id', $custom->id)->exists())->toBeTrue()
         ->and(Role::query()->where('id', $admin->id)->exists())->toBeTrue();
 });
 

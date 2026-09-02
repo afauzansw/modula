@@ -3,9 +3,13 @@
 use App\Models\User;
 use App\Repositories\Eloquent\BaseRepository;
 use App\Repositories\Eloquent\EloquentAuthRepository;
+use App\Repositories\PaginateQuery;
+use App\Repositories\SpatieQuery;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Spatie\QueryBuilder\Exceptions\InvalidFilterQuery;
+use Spatie\QueryBuilder\Exceptions\InvalidSortQuery;
 
 /**
  * Concrete repository used only by these tests, so BaseRepository can be
@@ -62,24 +66,51 @@ test('update() persists changes and returns the model', function () {
         ->and($user->fresh()->name)->toBe('After');
 });
 
-test('all() returns a paginator and honours perPage', function () {
+test('all() returns a paginator and honours PaginateQuery perPage', function () {
     collect(range(1, 5))->map(fn () => createUser());
 
-    $page = userRepo()->all(perPage: 2);
+    $page = userRepo()->all(paginate: new PaginateQuery(perPage: 2));
 
     expect($page)->toBeInstanceOf(LengthAwarePaginator::class)
         ->and($page->perPage())->toBe(2)
-        ->and($page->total())->toBe(5);
+        ->and($page->total())->toBe(5)
+        ->and($page->lastPage())->toBe(3);
 });
 
-test('all() applies forced $filters on top of the query', function () {
-    createUser(['email' => 'keep@example.com']);
+test('all() with withPaginate: false puts every row on a single page', function () {
+    collect(range(1, 5))->map(fn () => createUser());
+
+    $page = userRepo()->all(paginate: new PaginateQuery(withPaginate: false));
+
+    expect($page->total())->toBe(5)
+        ->and($page->lastPage())->toBe(1)
+        ->and($page->items())->toHaveCount(5);
+});
+
+test('a non-empty SpatieQuery is the filter allow-list for that call', function () {
+    createUser(['name' => 'Keep', 'email' => 'keep@example.com']);
     collect(range(1, 3))->map(fn () => createUser());
 
-    $page = userRepo()->all(['email' => 'keep@example.com']);
+    // UserTestRepository allows [name, email]; this call narrows the request to [email]
+    $this->app->instance('request', Request::create('/', 'GET', ['filter' => ['email' => 'keep@example.com']]));
+    expect(userRepo()->all(new SpatieQuery(filters: ['email']))->total())->toBe(1);
 
-    expect($page->total())->toBe(1)
-        ->and($page->items()[0]->email)->toBe('keep@example.com');
+    $this->app->instance('request', Request::create('/', 'GET', ['filter' => ['name' => 'Keep']]));
+    expect(fn () => userRepo()->all(new SpatieQuery(filters: ['email'])))->toThrow(InvalidFilterQuery::class);
+});
+
+test('a non-empty SpatieQuery is the sort allow-list for that call', function () {
+    createUser(['email' => 'b@example.com']);
+    createUser(['email' => 'a@example.com']);
+    createUser(['email' => 'c@example.com']);
+
+    // the repo's $allowedSorts has no 'email'; naming it here lets the request use it
+    $this->app->instance('request', Request::create('/', 'GET', ['sort' => '-email']));
+    $emails = collect(userRepo()->all(new SpatieQuery(sorts: ['email']))->items())->pluck('email')->all();
+    expect($emails)->toBe(['c@example.com', 'b@example.com', 'a@example.com']);
+
+    $this->app->instance('request', Request::create('/', 'GET', ['sort' => 'name']));
+    expect(fn () => userRepo()->all(new SpatieQuery(sorts: ['email'])))->toThrow(InvalidSortQuery::class);
 });
 
 test('all() eager-loads the repository $with relations on every row', function () {

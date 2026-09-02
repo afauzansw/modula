@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateRoleRequest extends FormRequest
+class RoleRequest extends FormRequest
 {
     /**
      * @return array<string, mixed>

@@ -103,11 +103,9 @@ function createCourse(array $attributes = []): Course
         'title' => $title,
         'slug' => Str::slug($title).'-'.Str::lower(Str::random(6)),
         'description' => fake()->paragraph(),
-        'thumbnail_path' => null,
         'price' => 0,
         'is_free' => true,
         'status' => 'draft',
-        'certificate_template_path' => null,
         ...$attributes,
     ]);
 }

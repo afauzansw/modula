@@ -30,7 +30,18 @@ const columns: ColumnDef<CourseListItem>[] = [
             />
         ),
         cell: ({ row }) => (
-            <span className="font-medium">{row.original.title}</span>
+            <div className="flex items-center gap-2">
+                {row.original.thumbnail ? (
+                    <img
+                        src={row.original.thumbnail}
+                        alt=""
+                        className="h-8 w-12 shrink-0 rounded object-cover"
+                    />
+                ) : (
+                    <div className="h-8 w-12 shrink-0 rounded bg-muted" />
+                )}
+                <span className="font-medium">{row.original.title}</span>
+            </div>
         ),
     },
     {

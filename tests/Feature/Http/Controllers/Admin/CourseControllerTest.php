@@ -3,6 +3,8 @@
 use App\Enums\AdminPermission;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(fn () => $this->seed(RolePermissionSeeder::class));
@@ -46,6 +48,22 @@ test('fetch returns courses with instructor and category names as json', functio
 
     expect(collect($data)->firstWhere('title', 'Compilers'))
         ->toMatchArray(['instructor' => 'Grace Hopper', 'category' => 'Engineering']);
+});
+
+test('fetch returns the thumbnail url, or null when the course has none', function () {
+    Storage::fake('public');
+
+    createCourse(['title' => 'Plain']);
+    $withCover = createCourse(['title' => 'Cover']);
+    $withCover->addMedia(UploadedFile::fake()->create('c.jpg', 20, 'image/jpeg'))->toMediaCollection('thumbnail');
+
+    $data = $this->actingAs(courseAdmin())
+        ->getJson(route('admin.courses.fetch'))
+        ->assertOk()
+        ->json('data');
+
+    expect(collect($data)->firstWhere('title', 'Plain')['thumbnail'])->toBeNull()
+        ->and(collect($data)->firstWhere('title', 'Cover')['thumbnail'])->toContain('c.jpg');
 });
 
 test('fetch reports a null category for an uncategorised course', function () {

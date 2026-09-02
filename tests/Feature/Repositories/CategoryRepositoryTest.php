@@ -20,24 +20,20 @@ test('findBySlug() returns the matching category or null', function () {
         ->and(categoryRepo()->findBySlug('missing'))->toBeNull();
 });
 
-test('all() filters by name and eager-loads the course count', function () {
-    $needle = createCategory(['name' => 'Needle']);
-    foreach (range(1, 2) as $i) {
-        createCourse(['category_id' => $needle->id]);
-    }
+test('all() filters by name', function () {
+    createCategory(['name' => 'Needle']);
     foreach (range(1, 2) as $i) {
         createCategory();
     }
 
     $this->app->instance('request', Request::create('/', 'GET', [
         'filter' => ['name' => 'Needle'],
-        'include' => 'coursesCount',
     ]));
 
     $page = categoryRepo()->all();
 
     expect($page->total())->toBe(1)
-        ->and($page->items()[0]->courses_count)->toBe(2);
+        ->and($page->items()[0]->name)->toBe('Needle');
 });
 
 test('options() returns every category as {id, name} ordered by name', function () {

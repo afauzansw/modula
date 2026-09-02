@@ -3,10 +3,28 @@
 use App\Repositories\Contracts\CourseRepositoryInterface;
 use App\Repositories\Eloquent\EloquentCourseRepository;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 function courseRepo(): CourseRepositoryInterface
 {
     return app(CourseRepositoryInterface::class);
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function courseAttributes(array $overrides = []): array
+{
+    return [
+        'instructor_id' => createUser()->id,
+        'title' => 'Course',
+        'slug' => 'course-'.fake()->unique()->numerify('####'),
+        'price' => 0,
+        'is_free' => true,
+        'status' => 'draft',
+        ...$overrides,
+    ];
 }
 
 test('the course repository interface resolves to the Eloquent implementation', function () {
@@ -77,4 +95,40 @@ test('all() sorts by title', function () {
     $this->app->instance('request', Request::create('/', 'GET', ['sort' => 'title']));
 
     expect(courseRepo()->all()->items()[0]->title)->toBe('Alpha Course');
+});
+
+test('create() moves an uploaded thumbnail into the media collection', function () {
+    Storage::fake('public');
+
+    $this->app->instance('request', Request::create('/', 'POST', [], [], [
+        'thumbnail' => UploadedFile::fake()->create('cover.jpg', 20, 'image/jpeg'),
+    ]));
+
+    $course = courseRepo()->create(courseAttributes());
+
+    expect($course->fresh()->getFirstMedia('thumbnail'))->not->toBeNull()
+        ->and($course->fresh()->getFirstMedia('thumbnail')->file_name)->toBe('cover.jpg');
+});
+
+test('create() attaches nothing when the request carries no file', function () {
+    Storage::fake('public');
+
+    $course = courseRepo()->create(courseAttributes());
+
+    expect($course->fresh()->getMedia('thumbnail'))->toBeEmpty();
+});
+
+test('update() replaces the single-file thumbnail with a newly uploaded one', function () {
+    Storage::fake('public');
+    $course = createCourse();
+    $course->addMedia(UploadedFile::fake()->create('old.jpg', 20, 'image/jpeg'))->toMediaCollection('thumbnail');
+
+    $this->app->instance('request', Request::create('/', 'POST', [], [], [
+        'thumbnail' => UploadedFile::fake()->create('new.jpg', 20, 'image/jpeg'),
+    ]));
+
+    courseRepo()->update($course, ['title' => 'Renamed']);
+
+    expect($course->fresh()->getMedia('thumbnail'))->toHaveCount(1)
+        ->and($course->fresh()->getFirstMedia('thumbnail')->file_name)->toBe('new.jpg');
 });

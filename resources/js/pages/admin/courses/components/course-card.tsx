@@ -13,6 +13,16 @@ const statusVariant: Record<CourseStatus, 'default' | 'secondary' | 'outline'> =
 export function CourseCard({ course }: { course: CourseListItem }) {
     return (
         <div className="flex h-full flex-col gap-2 rounded-lg border p-4">
+            {course.thumbnail ? (
+                <img
+                    src={course.thumbnail}
+                    alt=""
+                    className="mb-1 aspect-video w-full rounded object-cover"
+                />
+            ) : (
+                <div className="mb-1 aspect-video w-full rounded bg-muted" />
+            )}
+
             <div className="flex items-start justify-between gap-3">
                 <span className="font-medium">{course.title}</span>
                 <Badge

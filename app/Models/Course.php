@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Support\Carbon;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property int $id
@@ -16,11 +18,9 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property string $slug
  * @property string|null $description
- * @property string|null $thumbnail_path
  * @property int $price
  * @property bool $is_free
  * @property string $status
- * @property string|null $certificate_template_path
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -30,14 +30,14 @@ use Illuminate\Support\Carbon;
     'title',
     'slug',
     'description',
-    'thumbnail_path',
     'price',
     'is_free',
     'status',
-    'certificate_template_path',
 ])]
-class Course extends Model
+class Course extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
     /**
      * @return array<string, string>
      */
@@ -47,6 +47,12 @@ class Course extends Model
             'price' => 'integer',
             'is_free' => 'boolean',
         ];
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('thumbnail')->singleFile();
+        $this->addMediaCollection('certificate_template')->singleFile();
     }
 
     /**

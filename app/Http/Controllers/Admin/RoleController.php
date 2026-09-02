@@ -5,14 +5,16 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\AdminPermission;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\BulkDestroyRoleRequest;
-use App\Http\Requests\Admin\StoreRoleRequest;
-use App\Http\Requests\Admin\UpdateRoleRequest;
+use App\Http\Requests\Admin\RoleRequest;
 use App\Models\Role;
 use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Repositories\LoadQuery;
+use App\Repositories\SpatieQuery;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class RoleController extends Controller
 {
@@ -23,57 +25,41 @@ class RoleController extends Controller
         return Inertia::render('admin/roles/index');
     }
 
-    /**
-     * The paginated role listing the DataTable pulls from — one
-     * {id,name,is_system,permissions} row per role plus the paginator meta.
-     * Driven by the request's `filter` / `sort` / `page` query params through
-     * the repository's query builder.
-     */
     public function fetch(): JsonResponse
     {
-        $roles = $this->roles->all();
-
-        $rows = [];
-
-        foreach ($roles->items() as $role) {
-            if (! $role instanceof Role) {
-                continue;
-            }
-
-            $rows[] = [
-                'id' => $role->id,
-                'name' => $role->name,
-                'is_system' => $role->is_system,
-                'permissions' => $role->permissions->pluck('name')->all(),
-            ];
-        }
-
-        return $this->paginatedJson($roles, $rows);
+        return response()->json($this->roles->all(
+            new SpatieQuery(
+                filters: ['name', AllowedFilter::callback(
+                    'is_system',
+                    fn ($query, $value) => $query->where('is_system', filter_var($value, FILTER_VALIDATE_BOOLEAN)),
+                )],
+                sorts: ['name', 'created_at'],
+            ),
+            new LoadQuery(
+                with: ['permissions:id,name'],
+            ),
+        ));
     }
 
-    /**
-     * The admin-permission catalogue (name => label) the role form renders its
-     * checkboxes from. Code-defined; see {@see AdminPermission}.
-     */
     public function permissions(): JsonResponse
     {
         return response()->json(AdminPermission::labels());
     }
 
-    public function store(StoreRoleRequest $request): RedirectResponse
+    public function store(RoleRequest $request): RedirectResponse
     {
-        $this->roles->createCustomRole($request->string('name')->toString(), $request->input('permissions', []));
+        $this->roles->create($request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role created.')]);
 
         return redirect()->route('admin.roles.index');
     }
 
-    public function update(UpdateRoleRequest $request, Role $role): RedirectResponse
+    public function update(RoleRequest $request, Role $role): RedirectResponse
     {
         abort_if($role->is_system, 403);
 
-        $this->roles->updateCustomRole($role, $request->string('name')->toString(), $request->input('permissions', []));
+        $this->roles->update($role, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role updated.')]);
 
@@ -84,17 +70,13 @@ class RoleController extends Controller
     {
         abort_if($role->is_system, 403);
 
-        $this->roles->deleteCustomRole($role);
+        $this->roles->delete($role);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Role deleted.')]);
 
         return redirect()->route('admin.roles.index');
     }
 
-    /**
-     * Delete every selected custom role in one query. System roles among the
-     * ids are silently skipped (EloquentRoleRepository::bulkDelete).
-     */
     public function bulkDestroy(BulkDestroyRoleRequest $request): RedirectResponse
     {
         $deleted = $this->roles->bulkDelete($request->validated('ids'));

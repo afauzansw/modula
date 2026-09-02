@@ -8,6 +8,7 @@ export type CourseListItem = {
     price: number;
     is_free: boolean;
     status: CourseStatus;
+    thumbnail: string | null;
 };
 
 /** `{id, name}` for a category, from `CourseController::categories`. */

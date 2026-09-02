@@ -22,11 +22,6 @@ class CourseController extends Controller
         return Inertia::render('admin/courses/index');
     }
 
-    /**
-     * The paginated course listing the DataTable pulls from — one row per course
-     * with its instructor and category names, plus the paginator meta. Driven by
-     * the request's `filter` / `sort` / `page` query params.
-     */
     public function fetch(): JsonResponse
     {
         $courses = $this->courses->all();
@@ -46,15 +41,13 @@ class CourseController extends Controller
                 'price' => $course->price,
                 'is_free' => $course->is_free,
                 'status' => $course->status,
+                'thumbnail' => $course->getFirstMediaUrl('thumbnail') ?: null,
             ];
         }
 
         return $this->paginatedJson($courses, $rows);
     }
 
-    /**
-     * `{id, name}` for every category — the courses filter card's Category select.
-     */
     public function categories(): JsonResponse
     {
         return response()->json($this->categories->options());
