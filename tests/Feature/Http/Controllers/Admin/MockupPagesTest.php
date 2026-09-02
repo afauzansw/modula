@@ -16,7 +16,6 @@ function userWithPermission(string $permission): User
 }
 
 dataset('admin mockup pages', [
-    'payments' => ['admin.payments.index', AdminPermission::Payments, 'admin/payments/index'],
     'certificates' => ['admin.certificates.index', AdminPermission::Certificates, 'admin/certificates/index'],
     'students' => ['admin.students.index', AdminPermission::Users, 'admin/students/index'],
     'instructors' => ['admin.instructors.index', AdminPermission::Users, 'admin/instructors/index'],

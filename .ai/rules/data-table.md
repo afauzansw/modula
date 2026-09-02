@@ -57,6 +57,14 @@ fields={{ ids }}>`.
   `canSelect` with no predicate — every category is deletable. Components in
   `resources/js/pages/admin/categories/components/`, types in
   `resources/js/types/category.ts`.
+- **Student Payment** (`Admin\PaymentController`) — read-only, `fetch()` only.
+  Rows are `Payment`s with the student / course / order flattened off the
+  `order.user` / `order.course` chain (`EloquentPaymentRepository` sets
+  `$with = ['order.user', 'order.course']`); search hits `order.user.name` via
+  `AllowedFilter::partial('student', 'order.user.name')`, sortable on `amount`
+  / `paid_at`. **Table view only, no filter card, no selection.** Formatters in
+  `resources/js/pages/admin/payments/lib/format.ts`, types in
+  `resources/js/types/payment.ts`.
 
 ## Row selection: the `canSelect` prop
 `<DataTable canSelect>` prepends the leading checkbox column itself — pages must not add a `{ id: 'select' }` column. `canSelect` is `boolean | ((row) => boolean)`: `true` selects every row, a predicate disables the checkbox on some rows (e.g. roles pass `(role) => !role.is_system`). Pair it with `renderSelectionActions` for the bulk-action toolbar. In the list/grid views the checkbox is overlaid on each card (cards should leave top-left room for it).

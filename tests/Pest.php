@@ -4,6 +4,7 @@ use App\Models\Category;
 use App\Models\Course;
 use App\Models\Order;
 use App\Models\OtpCode;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -127,6 +128,26 @@ function createOrder(array $attributes = []): Order
         'gateway_ref' => null,
         'expired_at' => now()->addDay(),
         'paid_at' => null,
+        ...$attributes,
+    ]);
+}
+
+/**
+ * A settled payment. Pass `order_id` to attach an existing order; otherwise a
+ * paid order is created for it.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function createPayment(array $attributes = []): Payment
+{
+    $attributes['order_id'] ??= createOrder(['status' => 'paid', 'paid_at' => now()])->id;
+
+    return Payment::query()->create([
+        'method' => 'bank_transfer',
+        'gateway_transaction_id' => (string) Str::uuid(),
+        'amount' => 149_000,
+        'raw_response' => ['transaction_status' => 'settlement'],
+        'paid_at' => now(),
         ...$attributes,
     ]);
 }
