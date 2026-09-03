@@ -23,6 +23,19 @@ test('all() eager-loads the student and course on every row', function () {
         ->and($certificate->relationLoaded('course'))->toBeTrue();
 });
 
+test('forStudent() returns only that student certificates, newest issued first', function () {
+    $student = createUser();
+
+    $older = createCertificate(['user_id' => $student->id, 'issued_at' => now()->subYear()]);
+    $newer = createCertificate(['user_id' => $student->id, 'issued_at' => now()]);
+    createCertificate();
+
+    $result = certificateRepo()->forStudent($student->id);
+
+    expect($result->pluck('id')->all())->toBe([$newer->id, $older->id])
+        ->and($result->first()->relationLoaded('course'))->toBeTrue();
+});
+
 test('all() filters by a partial certificate number', function () {
     createCertificate(['certificate_number' => 'CERT-ALPHA-123']);
     createCertificate(['certificate_number' => 'CERT-BETA-456']);

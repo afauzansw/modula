@@ -2,8 +2,20 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Models\Certificate;
+use Illuminate\Database\Eloquent\Collection;
+
 /**
- * Issued-certificate listing for the admin dashboard. Read-only — inherits the
- * base listing/CRUD and adds nothing; every row carries its student and course.
+ * Issued-certificate reads. The admin listing inherits the base CRUD (rows
+ * carry their student + course); the student area uses `forStudent()`.
  */
-interface CertificateRepositoryInterface extends BaseRepositoryInterface {}
+interface CertificateRepositoryInterface extends BaseRepositoryInterface
+{
+    /**
+     * The given student's certificates, most recently issued first, each with
+     * its course loaded.
+     *
+     * @return Collection<int, Certificate>
+     */
+    public function forStudent(int $studentId): Collection;
+}

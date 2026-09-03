@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Certificate;
 use App\Repositories\Contracts\CertificateRepositoryInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Spatie\QueryBuilder\AllowedFilter;
 
 class EloquentCertificateRepository extends BaseRepository implements CertificateRepositoryInterface
@@ -23,5 +24,17 @@ class EloquentCertificateRepository extends BaseRepository implements Certificat
 
         $this->allowedFilters[] = AllowedFilter::exact('user_id');
         $this->allowedFilters[] = AllowedFilter::exact('course_id');
+    }
+
+    /**
+     * @return Collection<int, Certificate>
+     */
+    public function forStudent(int $studentId): Collection
+    {
+        return Certificate::query()
+            ->where('user_id', $studentId)
+            ->with('course')
+            ->latest('issued_at')
+            ->get();
     }
 }

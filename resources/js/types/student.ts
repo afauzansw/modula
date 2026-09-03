@@ -7,6 +7,13 @@ export type MyCourseItem = {
     status: 'active' | 'completed';
 };
 
+export type MyCertificateItem = {
+    id: number;
+    course: string;
+    certificate_number: string;
+    issued_at: string;
+};
+
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'expired';
 
 export type MyOrderItem = {
