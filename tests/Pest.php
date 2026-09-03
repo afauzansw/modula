@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Order;
 use App\Models\OtpCode;
@@ -128,6 +129,25 @@ function createOrder(array $attributes = []): Order
         'gateway_ref' => null,
         'expired_at' => now()->addDay(),
         'paid_at' => null,
+        ...$attributes,
+    ]);
+}
+
+/**
+ * A certificate issued to a student for a course. Pass `user_id` / `course_id`
+ * to attach existing rows.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function createCertificate(array $attributes = []): Certificate
+{
+    $attributes['user_id'] ??= createUser()->id;
+    $attributes['course_id'] ??= createCourse()->id;
+
+    return Certificate::query()->create([
+        'certificate_number' => 'CERT-'.Str::upper(Str::random(10)),
+        'file_path' => 'certificates/'.Str::uuid()->toString().'.pdf',
+        'issued_at' => now(),
         ...$attributes,
     ]);
 }

@@ -65,6 +65,15 @@ fields={{ ids }}>`.
   / `paid_at`. **Table view only, no filter card, no selection.** Formatters in
   `resources/js/pages/admin/payments/lib/format.ts`, types in
   `resources/js/types/payment.ts`.
+- **Certificate** (`Admin\CertificateController`) — read-only, `fetch()` only
+  (transform: student / course names + `certificate_number` + `issued_at`,
+  `EloquentCertificateRepository` sets `$with = ['user', 'course']`). Search box
+  = partial `certificate_number`; **filter card = Student + Course selects**
+  (`user_id` / `course_id` exact). Their options come from the **existing**
+  `StudentController::fetch` / `CourseController::fetch` listings (first page,
+  mapped to `{id, name}` in `useCertificateStudents` / `useCertificateCourses`)
+  — no dedicated options endpoint. Table view only, sortable on `issued_at`.
+  Types in `resources/js/types/certificate.ts`.
 - **Student / Instructor** (`Admin\StudentController`, `Admin\InstructorController`)
   — one shared `<UserDirectoryTable>` component (name / email / status / joined,
   searchable, table only). Each controller injects `Student{,Instructor}RepositoryInterface`;

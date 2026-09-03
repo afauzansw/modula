@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Repositories\Contracts\AuthRepositoryInterface;
 use App\Repositories\Contracts\CategoryRepositoryInterface;
+use App\Repositories\Contracts\CertificateRepositoryInterface;
 use App\Repositories\Contracts\CourseRepositoryInterface;
 use App\Repositories\Contracts\InstructorRepositoryInterface;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
@@ -11,6 +12,7 @@ use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\StudentRepositoryInterface;
 use App\Repositories\Eloquent\EloquentAuthRepository;
 use App\Repositories\Eloquent\EloquentCategoryRepository;
+use App\Repositories\Eloquent\EloquentCertificateRepository;
 use App\Repositories\Eloquent\EloquentCourseRepository;
 use App\Repositories\Eloquent\EloquentInstructorRepository;
 use App\Repositories\Eloquent\EloquentPaymentRepository;
@@ -32,6 +34,7 @@ class RepositoryServiceProvider extends ServiceProvider
     public array $bindings = [
         AuthRepositoryInterface::class => EloquentAuthRepository::class,
         CategoryRepositoryInterface::class => EloquentCategoryRepository::class,
+        CertificateRepositoryInterface::class => EloquentCertificateRepository::class,
         CourseRepositoryInterface::class => EloquentCourseRepository::class,
         InstructorRepositoryInterface::class => EloquentInstructorRepository::class,
         PaymentRepositoryInterface::class => EloquentPaymentRepository::class,

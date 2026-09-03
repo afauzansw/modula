@@ -1,5 +1,6 @@
 export type * from './auth';
 export type * from './category';
+export type * from './certificate';
 export type * from './course';
 export type * from './navigation';
 export type * from './pagination';
