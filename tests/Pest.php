@@ -3,6 +3,7 @@
 use App\Models\Category;
 use App\Models\Certificate;
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\Order;
 use App\Models\OtpCode;
 use App\Models\Payment;
@@ -129,6 +130,26 @@ function createOrder(array $attributes = []): Order
         'gateway_ref' => null,
         'expired_at' => now()->addDay(),
         'paid_at' => null,
+        ...$attributes,
+    ]);
+}
+
+/**
+ * An active enrollment. Pass `user_id` / `course_id` to attach existing rows.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function createEnrollment(array $attributes = []): Enrollment
+{
+    $attributes['user_id'] ??= createUser()->id;
+    $attributes['course_id'] ??= createCourse()->id;
+
+    // forceCreate so a test can pin `created_at` (not in the model's #[Fillable]).
+    return Enrollment::forceCreate([
+        'status' => 'active',
+        'progress_percent' => 0,
+        'last_lesson_id' => null,
+        'completed_at' => null,
         ...$attributes,
     ]);
 }

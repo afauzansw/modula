@@ -3,7 +3,6 @@
 use Inertia\Testing\AssertableInertia as Assert;
 
 dataset('student mockup pages', [
-    'courses' => ['courses.index', 'student/courses'],
     'payments' => ['payments.index', 'student/payments'],
     'certificates' => ['certificates.index', 'student/certificates'],
 ]);

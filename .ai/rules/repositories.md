@@ -84,6 +84,10 @@ change can only touch rows of that role.
   nothing.
 - Shared listing config (allowed filters/sorts, a search callback) goes on an
   abstract `Eloquent{X}RoleRepository` the concretes extend.
+- This is for a *fixed* subset (a role, a flag). A *per-request* scope — "this
+  user's enrollments" — is just a dedicated method that queries directly
+  (`EloquentEnrollmentRepository::forStudent(int $id)`), not a model or a
+  global scope.
 
 ## Validation lives in Form Requests, not the repository
 A repository persists what it's given; it does not decide whether the input is
