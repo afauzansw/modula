@@ -16,7 +16,6 @@ function userWithPermission(string $permission): User
 }
 
 dataset('admin mockup pages', [
-    'admins' => ['admin.admins.index', AdminPermission::Admins, 'admin/admins/index'],
     'settings' => ['admin.settings', AdminPermission::Settings, 'admin/settings'],
 ]);
 

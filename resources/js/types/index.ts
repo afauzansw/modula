@@ -1,3 +1,4 @@
+export type * from './admin-user';
 export type * from './auth';
 export type * from './category';
 export type * from './certificate';

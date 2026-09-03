@@ -153,6 +153,21 @@ function createCertificate(array $attributes = []): Certificate
 }
 
 /**
+ * A user holding the given direct admin-panel permissions (defaults to one, so
+ * the account shows up as an admin). Seed RolePermissionSeeder first.
+ *
+ * @param  list<string>  $permissions
+ * @param  array<string, mixed>  $attributes
+ */
+function createAdmin(array $permissions = ['admin.dashboard'], array $attributes = []): User
+{
+    $user = createUser($attributes);
+    $user->givePermissionTo($permissions);
+
+    return $user;
+}
+
+/**
  * A user assigned the given Spatie role. The role must already exist — seed
  * RolePermissionSeeder first.
  *

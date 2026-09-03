@@ -43,6 +43,17 @@ fields={{ ids }}>`.
   route: both are `RoleFormDialog` modals on the index; `store`/`update`/
   `destroy` stay plain redirect actions. Components in
   `resources/js/pages/admin/roles/components/`, types in `resources/js/types/role.ts`.
+- **Admins** (`Admin\AdminUserController`) — full CRUD. `fetch()` (transform:
+  name / email / direct-permission names). `AdminFormDialog` (name / email /
+  password — optional on edit — + the shared `<PermissionCheckboxList>` from
+  `@/components`, fed by `usePermissionCatalogue`). Search box = `name`; filter
+  card = **Email** (text) + **Permission** (select, catalogue from the same
+  hook). `canSelect` + bulk delete; the controller skips the current user's own
+  id on `destroy` / `bulkDestroy`. Scoped by the **`Admin` model** (global
+  scope: has ≥1 direct `AdminPermission`; `getGuardNames()` borrows `User`'s
+  since `Admin` isn't an auth model). `EloquentAdminRepository::create()` /
+  `update()` `forceCreate` the verified user + `syncPermissions`. Types in
+  `resources/js/types/admin-user.ts`.
 - **Courses** (`Admin\CourseController`) — read-only. `fetch()` (courses, each
   row carrying `instructor` + `category` names + a `thumbnail` media URL) +
   `categories()` (`{id,name}` → `useCourseCategories`). `EloquentCourseRepository`
