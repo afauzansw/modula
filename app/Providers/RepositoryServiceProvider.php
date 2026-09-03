@@ -9,6 +9,7 @@ use App\Repositories\Contracts\CertificateRepositoryInterface;
 use App\Repositories\Contracts\CourseRepositoryInterface;
 use App\Repositories\Contracts\EnrollmentRepositoryInterface;
 use App\Repositories\Contracts\InstructorRepositoryInterface;
+use App\Repositories\Contracts\OrderRepositoryInterface;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\StudentRepositoryInterface;
@@ -19,6 +20,7 @@ use App\Repositories\Eloquent\EloquentCertificateRepository;
 use App\Repositories\Eloquent\EloquentCourseRepository;
 use App\Repositories\Eloquent\EloquentEnrollmentRepository;
 use App\Repositories\Eloquent\EloquentInstructorRepository;
+use App\Repositories\Eloquent\EloquentOrderRepository;
 use App\Repositories\Eloquent\EloquentPaymentRepository;
 use App\Repositories\Eloquent\EloquentRoleRepository;
 use App\Repositories\Eloquent\EloquentStudentRepository;
@@ -43,6 +45,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CourseRepositoryInterface::class => EloquentCourseRepository::class,
         EnrollmentRepositoryInterface::class => EloquentEnrollmentRepository::class,
         InstructorRepositoryInterface::class => EloquentInstructorRepository::class,
+        OrderRepositoryInterface::class => EloquentOrderRepository::class,
         PaymentRepositoryInterface::class => EloquentPaymentRepository::class,
         RoleRepositoryInterface::class => EloquentRoleRepository::class,
         StudentRepositoryInterface::class => EloquentStudentRepository::class,

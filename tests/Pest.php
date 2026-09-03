@@ -123,7 +123,8 @@ function createOrder(array $attributes = []): Order
     $attributes['user_id'] ??= createUser()->id;
     $attributes['course_id'] ??= createCourse()->id;
 
-    return Order::query()->create([
+    // forceCreate so a test can pin `created_at` (not in the model's #[Fillable]).
+    return Order::forceCreate([
         'order_number' => 'ORD-'.Str::upper(Str::random(10)),
         'amount' => 149_000,
         'status' => 'pending',
