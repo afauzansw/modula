@@ -8,6 +8,7 @@ use App\Repositories\Contracts\CategoryRepositoryInterface;
 use App\Repositories\Contracts\CertificateRepositoryInterface;
 use App\Repositories\Contracts\CourseRepositoryInterface;
 use App\Repositories\Contracts\EnrollmentRepositoryInterface;
+use App\Repositories\Contracts\InstructorCourseRepositoryInterface;
 use App\Repositories\Contracts\InstructorRepositoryInterface;
 use App\Repositories\Contracts\OrderRepositoryInterface;
 use App\Repositories\Contracts\PaymentRepositoryInterface;
@@ -19,6 +20,7 @@ use App\Repositories\Eloquent\EloquentCategoryRepository;
 use App\Repositories\Eloquent\EloquentCertificateRepository;
 use App\Repositories\Eloquent\EloquentCourseRepository;
 use App\Repositories\Eloquent\EloquentEnrollmentRepository;
+use App\Repositories\Eloquent\EloquentInstructorCourseRepository;
 use App\Repositories\Eloquent\EloquentInstructorRepository;
 use App\Repositories\Eloquent\EloquentOrderRepository;
 use App\Repositories\Eloquent\EloquentPaymentRepository;
@@ -44,6 +46,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CertificateRepositoryInterface::class => EloquentCertificateRepository::class,
         CourseRepositoryInterface::class => EloquentCourseRepository::class,
         EnrollmentRepositoryInterface::class => EloquentEnrollmentRepository::class,
+        InstructorCourseRepositoryInterface::class => EloquentInstructorCourseRepository::class,
         InstructorRepositoryInterface::class => EloquentInstructorRepository::class,
         OrderRepositoryInterface::class => EloquentOrderRepository::class,
         PaymentRepositoryInterface::class => EloquentPaymentRepository::class,

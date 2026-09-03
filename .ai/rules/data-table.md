@@ -29,14 +29,23 @@ Row relations are eager-loaded by `BaseRepository::$with` (a repo property —
 no `?include=` / `$request->merge` hack; request-driven includes were removed).
 Async filter options come from another sibling JSON action + a fetch-on-mount hook.
 
-For create/edit, the resource has ONE `{Resource}FormDialog` modal (create
+For create/edit, the default is ONE `{Resource}FormDialog` modal (create
 when no row passed, edit when one is) on the index — no `create`/`edit`
 routes (`Route::resource(...)->except(['show', 'create', 'edit'])`) — plus
 `store`/`update`/`destroy`/`bulkDestroy` as plain redirect actions.
 `{Resource}Actions` holds the per-row Edit + Delete controls (a
 `<ConfirmDialog>` for delete); bulk delete is `<DataTable canSelect>` +
 `renderSelectionActions` wiring a `<ConfirmDialog form={...bulkDestroy.form()}
-fields={{ ids }}>`.
+fields={{ ids }}>`. Bulk *status* changes are the same shape — a
+`<ConfirmDialog>` per action carrying `fields={{ ids, <col>: <value> }}` to a
+`PATCH .../status` route (`bulkUpdate($ids, [<col> => <value>])`).
+
+A bigger form goes on its **own page** instead (`create.tsx` / `edit.tsx` +
+a shared `{Resource}Form` component, `Route::resource(...)->except(['show'])`,
+the "New" button and per-row Edit are `<Link>`s). Instructor courses do this.
+Native `<select>` / `<textarea>` (styled to match `<Input>`) submit reliably
+in an Inertia `<Form>`; the shadcn `Select` does not. A file input +
+`BaseRepository::$fileKeys` handles thumbnails.
 
 - **Roles** (`Admin\RoleController`) — `fetch()` (roles) + `permissions()`
   (AdminPermission catalogue → `usePermissionCatalogue`). No `create`/`edit`
@@ -85,6 +94,17 @@ fields={{ ids }}>`.
   mapped to `{id, name}` in `useCertificateStudents` / `useCertificateCourses`)
   — no dedicated options endpoint. Table view only, sortable on `issued_at`.
   Types in `resources/js/types/certificate.ts`.
+- **Instructor Courses** (`Instructor\CourseController`) — full CRUD, scoped to
+  the signed-in instructor by the **`InstructorCourse` model** (`$table =
+  'courses'`, `getMorphClass() → Course`, a *dynamic* global scope
+  `where('instructor_id', Auth::id())` — so it also constrains `bulkUpdate` /
+  `bulkDelete` / route-model-binding). `EloquentInstructorCourseRepository::create()`
+  stamps `instructor_id`. Create/edit are **pages** (`create.tsx` / `edit.tsx`
+  + `CourseForm`), not modals. Search = `title`; filter card = Category
+  (select) + Price (Free/Paid → `is_free`) + Status (select). Bulk **Publish /
+  Unpublish / Delete**. `CourseRequest` derives the slug from the title
+  (globally unique) and forces `price = 0` when `is_free`. Types in
+  `resources/js/types/instructor.ts`.
 - **Student / Instructor** (`Admin\StudentController`, `Admin\InstructorController`)
   — one shared `<UserDirectoryTable>` component (name / email / status / joined,
   searchable, table only). Each controller injects `Student{,Instructor}RepositoryInterface`;

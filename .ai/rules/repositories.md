@@ -88,6 +88,13 @@ change can only touch rows of that role.
   user's enrollments" — is just a dedicated method that queries directly
   (`EloquentEnrollmentRepository::forStudent(int $id)`), not a model or a
   global scope.
+- A *per-user CRUD* scope (an instructor managing only their own courses) is
+  the model-scope pattern with a **dynamic** predicate:
+  `App\Models\InstructorCourse` adds `where('instructor_id', Auth::id())` in its
+  global scope, so `all()` / `bulkUpdate` / `bulkDelete` / route-model-binding
+  are all constrained; the repo's `create()` stamps `instructor_id`. Set
+  `protected $table` on the subclass — Eloquent won't guess it from the child
+  class name.
 
 ## Validation lives in Form Requests, not the repository
 A repository persists what it's given; it does not decide whether the input is

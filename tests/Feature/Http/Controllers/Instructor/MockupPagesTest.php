@@ -6,7 +6,6 @@ use Inertia\Testing\AssertableInertia as Assert;
 beforeEach(fn () => $this->seed(RolePermissionSeeder::class));
 
 dataset('instructor mockup pages', [
-    'courses' => ['instructor.courses.index', 'instructor/courses'],
     'orders' => ['instructor.orders.index', 'instructor/orders'],
 ]);
 
