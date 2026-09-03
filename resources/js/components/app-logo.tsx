@@ -1,20 +1,24 @@
 import { usePage } from '@inertiajs/react';
 
-import AppLogoIcon from '@/components/app-logo-icon';
-
+/**
+ * The app wordmark for the sidebar header — swapped by theme. In the collapsed
+ * (icon) sidebar the parent clips it to its left edge.
+ */
 export default function AppLogo() {
-    const { name } = usePage().props;
+    const { name } = usePage<{ name: string }>().props;
 
     return (
         <>
-            <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                <AppLogoIcon className="size-5 fill-current text-white dark:text-black" />
-            </div>
-            <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-tight font-semibold">
-                    {name}
-                </span>
-            </div>
+            <img
+                src="/logo-sidebar-light.png"
+                alt={name}
+                className="h-8 w-auto max-w-none shrink-0 object-contain object-left dark:hidden"
+            />
+            <img
+                src="/logo-sidebar-dark.png"
+                alt={name}
+                className="hidden h-8 w-auto max-w-none shrink-0 object-contain object-left dark:block"
+            />
         </>
     );
 }
