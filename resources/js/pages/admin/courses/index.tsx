@@ -12,8 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { useCourseCategories } from '@/hooks/use-course-categories';
 import { index } from '@/routes/admin/courses';
 import type { CourseListItem } from '@/types';
-import { CourseCard } from './components/course-card';
-import { formatPrice } from './lib/format-price';
+import { statusVariant } from '@/const/course';
+import { CourseCard } from '@/components/course-card/course-card';
+import { CoursePrice } from '@/components/course-card/course-price';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 
 /** Stable reference — maps sortable columns to their backend `sort` field. */
 const sortFields = { title: 'title', price: 'price' };
@@ -48,6 +50,12 @@ const columns: ColumnDef<CourseListItem>[] = [
         accessorKey: 'instructor',
         enableSorting: false,
         header: 'Instructor',
+        cell: ({ row }) => (
+            <ProfileAvatar
+                image={''}
+                name={row.original.instructor}
+            />
+        ),
     },
     {
         accessorKey: 'category',
@@ -69,15 +77,34 @@ const columns: ColumnDef<CourseListItem>[] = [
                 onToggleSort={column.getToggleSortingHandler()}
             />
         ),
-        cell: ({ row }) =>
-            formatPrice(row.original.price, row.original.is_free),
+        cell: ({ row }) => (
+            <CoursePrice
+                is_free={row.original.is_free}
+                price={row.original.price}
+            />
+        ),
     },
+    // {
+    //     accessorKey: 'total_modules',
+    //     header: ({ column }) => (
+    //         <DataTableColumnHeader
+    //             title="Total Modules"
+    //             canSort={column.getCanSort()}
+    //             sorted={column.getIsSorted()}
+    //             onToggleSort={column.getToggleSortingHandler()}
+    //         />
+    //     ),
+    //     cell: ({ row }) => <CoursePrice is_free={row.original.is_free} price={row.original.price} />,
+    // },
     {
         accessorKey: 'status',
         enableSorting: false,
         header: 'Status',
         cell: ({ row }) => (
-            <Badge variant="outline" className="capitalize">
+            <Badge
+                variant={statusVariant[row.original.status]}
+                className="shrink-0 capitalize"
+            >
                 {row.original.status}
             </Badge>
         ),
