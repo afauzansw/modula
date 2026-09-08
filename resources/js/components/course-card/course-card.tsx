@@ -28,7 +28,7 @@ export function CourseCard({ course }: { course?: TCourse }) {
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                    {course?.category?.name ?? 'Uncategorized'} · {course?.instructor}
+                    {course?.category?.name ?? ''} · {course?.instructor?.name ?? ''}
                 </p>
             </div>
 

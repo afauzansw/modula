@@ -104,14 +104,7 @@ const columns: ColumnDef<TCourse>[] = [
     },
     {
         accessorKey: 'ratings_avg_stars',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Rating"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Rating',
         cell: ({ row }) => <Rating rating={row.original?.ratings_avg_stars} />,
     },
     {
