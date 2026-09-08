@@ -81,6 +81,7 @@ abstract class BaseRepository implements BaseRepositoryInterface
         }
 
         $query = QueryBuilder::for($base)
+        ->allowedIncludes()
             ->allowedFilters(...(($scope->filters == []) ? $this->allowedFilters : $scope->filters))
             ->allowedSorts(...(($scope->sorts == []) ? $this->allowedSorts : $scope->sorts));
 
@@ -103,9 +104,6 @@ abstract class BaseRepository implements BaseRepositoryInterface
         return $this->model->newQuery()->findOrFail($id);
     }
 
-    /**
-     * @param  array<string, mixed>  $data
-     */
     public function create(array $data): Model
     {
         return DB::transaction(function () use ($data): Model {

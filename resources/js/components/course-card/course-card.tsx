@@ -1,15 +1,12 @@
 import { Badge } from '@/components/ui/badge';
-import type { CourseListItem, CourseStatus } from '@/types';
-import { cn } from '@/lib/utils';
+import type { TCourse } from '@/types';
 import { statusVariant } from '@/const/course';
-import { formatPrice } from '@/pages/admin/courses/lib/format-price';
 import { CoursePrice } from './course-price';
 
-/** A course rendered as a card for the DataTable grid view. */
-export function CourseCard({ course }: { course: CourseListItem }) {
+export function CourseCard({ course }: { course?: TCourse }) {
     return (
         <div className="flex h-full flex-col gap-2 rounded-lg border p-2.5">
-            {course.thumbnail ? (
+            {course?.thumbnail ? (
                 <img
                     src={course.thumbnail}
                     alt=""
@@ -21,21 +18,21 @@ export function CourseCard({ course }: { course: CourseListItem }) {
 
             <div>
                 <div className="flex items-start justify-between gap-3">
-                    <span className="font-medium">{course.title}</span>
+                    <span className="font-medium">{course?.title}</span>
                     <Badge
-                        variant={statusVariant[course.status]}
+                        variant={statusVariant[course?.status ?? 'archived']}
                         className="shrink-0 capitalize"
                     >
-                        {course.status}
+                        {course?.status}
                     </Badge>
                 </div>
 
                 <p className="text-sm text-muted-foreground">
-                    {course.category ?? 'Uncategorized'} · {course.instructor}
+                    {course?.category?.name ?? 'Uncategorized'} · {course?.instructor}
                 </p>
             </div>
 
-            <CoursePrice is_free={course.is_free} price={course.price} />
+            <CoursePrice is_free={course?.is_free} price={course?.price} />
         </div>
     );
 }

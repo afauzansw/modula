@@ -38,6 +38,10 @@ class Course extends Model implements HasMedia
 {
     use InteractsWithMedia;
 
+    protected $appends = [
+        'thumbnail',
+    ];
+
     /**
      * @return array<string, string>
      */
@@ -53,6 +57,11 @@ class Course extends Model implements HasMedia
     {
         $this->addMediaCollection('thumbnail')->singleFile();
         $this->addMediaCollection('certificate_template')->singleFile();
+    }
+
+    public function getThumbnailAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('thumbnail') ?: null;
     }
 
     /**

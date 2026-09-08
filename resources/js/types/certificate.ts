@@ -8,6 +8,6 @@ export type CertificateListItem = {
 
 /** `{id, name}` option for the certificates filter dropdowns. */
 export type CertificateFilterOption = {
-    id: number;
-    name: string;
+    id?: number;
+    name?: string;
 };

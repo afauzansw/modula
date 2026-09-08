@@ -1,8 +1,7 @@
-import type { CourseListItem } from '@/types';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/pages/admin/courses/lib/format-price';
 
-export function CoursePrice({ is_free, price }: { is_free: boolean; price: number }) {
+export function CoursePrice({ is_free, price }: { is_free?: boolean; price?: number }) {
     return (
         <p
             className={cn(

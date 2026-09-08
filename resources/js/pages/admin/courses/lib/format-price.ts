@@ -5,6 +5,6 @@ const idr = new Intl.NumberFormat('id-ID', {
 });
 
 /** "Free" for free courses, otherwise the price as `Rp 149.000`. */
-export function formatPrice(price: number, isFree: boolean): string {
-    return isFree ? 'Free' : idr.format(price);
+export function formatPrice(price?: number, isFree?: boolean): string {
+    return isFree ? 'Free' : idr.format( price ?? 0);
 }

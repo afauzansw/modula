@@ -11,16 +11,15 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { useCourseCategories } from '@/hooks/use-course-categories';
 import { index } from '@/routes/admin/courses';
-import type { CourseListItem } from '@/types';
+import type { TCourse } from '@/types';
 import { statusVariant } from '@/const/course';
 import { CourseCard } from '@/components/course-card/course-card';
 import { CoursePrice } from '@/components/course-card/course-price';
-import { ProfileAvatar } from '@/components/ui/profile-avatar';
+import { InstructorProfileAvatar } from '@/components/ui/profile-avatar';
 
-/** Stable reference — maps sortable columns to their backend `sort` field. */
 const sortFields = { title: 'title', price: 'price' };
 
-const columns: ColumnDef<CourseListItem>[] = [
+const columns: ColumnDef<TCourse>[] = [
     {
         accessorKey: 'title',
         header: ({ column }) => (
@@ -51,9 +50,10 @@ const columns: ColumnDef<CourseListItem>[] = [
         enableSorting: false,
         header: 'Instructor',
         cell: ({ row }) => (
-            <ProfileAvatar
+            <InstructorProfileAvatar
                 image={''}
-                name={row.original.instructor}
+                name={row.original.instructor.name}
+                subtitle={row.original.instructor.email}
             />
         ),
     },
@@ -63,7 +63,7 @@ const columns: ColumnDef<CourseListItem>[] = [
         header: 'Category',
         cell: ({ row }) => (
             <span className="text-muted-foreground">
-                {row.original.category ?? 'Uncategorized'}
+                {row.original.category?.name ?? 'Uncategorized'}
             </span>
         ),
     },
@@ -112,7 +112,7 @@ const columns: ColumnDef<CourseListItem>[] = [
 ];
 
 export default function CoursesIndex() {
-    const source = useHttpDataTable<CourseListItem>({
+    const source = useHttpDataTable<TCourse>({
         fetchUrl: CourseController.fetch.url(),
         filterKey: 'title',
         sortFields,

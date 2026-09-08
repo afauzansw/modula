@@ -10,5 +10,5 @@ export type Paginated<T> = {
     last_page: number;
     per_page: number;
     total: number;
-    links: PaginationLink[];
+    links: PaginationLink[]; 
 };

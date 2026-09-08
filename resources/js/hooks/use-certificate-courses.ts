@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import CourseController from '@/actions/App/Http/Controllers/Admin/CourseController';
 import type {
     CertificateFilterOption,
-    CourseListItem,
+    TCourse,
     Paginated,
 } from '@/types';
 
@@ -17,7 +17,7 @@ type Return = {
  * existing `CourseController::fetch` listing (first page) once on mount.
  */
 export function useCertificateCourses(): Return {
-    const { get } = useHttp<Record<string, never>, Paginated<CourseListItem>>(
+    const { get } = useHttp<Record<string, never>, Paginated<TCourse>>(
         {},
     );
 
@@ -31,9 +31,9 @@ export function useCertificateCourses(): Return {
             onSuccess: (page) => {
                 if (active) {
                     setCourses(
-                        page.data.map((course) => ({
-                            id: course.id,
-                            name: course.title,
+                        page?.data?.map((course: TCourse) => ({
+                            id: course?.id,
+                            name: course?.title,
                         })),
                     );
                 }
