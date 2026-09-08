@@ -22,5 +22,6 @@ final class SpatieQuery
     public function __construct(
         public array $filters = [],
         public array $sorts = [],
+        public array $includes = [],
     ) {}
 }

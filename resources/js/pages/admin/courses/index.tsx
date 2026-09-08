@@ -16,6 +16,8 @@ import { statusVariant } from '@/const/course';
 import { CourseCard } from '@/components/course-card/course-card';
 import { CoursePrice } from '@/components/course-card/course-price';
 import { InstructorProfileAvatar } from '@/components/ui/profile-avatar';
+import { Rating } from '@/components/ui/rating';
+import { FileText, ListTree } from 'lucide-react';
 
 const sortFields = { title: 'title', price: 'price' };
 
@@ -36,12 +38,28 @@ const columns: ColumnDef<TCourse>[] = [
                     <img
                         src={row.original.thumbnail}
                         alt=""
-                        className="h-8 w-12 shrink-0 rounded object-cover"
+                        className="h-9 w-14 shrink-0 rounded object-cover"
                     />
                 ) : (
-                    <div className="h-8 w-12 shrink-0 rounded bg-muted" />
+                    <div className="h-9 w-14 shrink-0 rounded bg-muted" />
                 )}
-                <span className="font-medium">{row.original.title}</span>
+                <div>
+                    <span className="font-medium">{row.original.title}</span>
+                    <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                        <div>
+                            <ListTree className="inline-block h-3 w-3" />
+                            <span className="ml-1">
+                                {row.original?.lessons_count} lessons
+                            </span>
+                        </div>
+                        <div>
+                            <FileText className="inline-block h-3 w-3" />
+                            <span className="ml-1">
+                                {row.original?.modules_count} modules
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
         ),
     },
@@ -84,18 +102,18 @@ const columns: ColumnDef<TCourse>[] = [
             />
         ),
     },
-    // {
-    //     accessorKey: 'total_modules',
-    //     header: ({ column }) => (
-    //         <DataTableColumnHeader
-    //             title="Total Modules"
-    //             canSort={column.getCanSort()}
-    //             sorted={column.getIsSorted()}
-    //             onToggleSort={column.getToggleSortingHandler()}
-    //         />
-    //     ),
-    //     cell: ({ row }) => <CoursePrice is_free={row.original.is_free} price={row.original.price} />,
-    // },
+    {
+        accessorKey: 'ratings_avg_stars',
+        header: ({ column }) => (
+            <DataTableColumnHeader
+                title="Rating"
+                canSort={column.getCanSort()}
+                sorted={column.getIsSorted()}
+                onToggleSort={column.getToggleSortingHandler()}
+            />
+        ),
+        cell: ({ row }) => <Rating rating={row.original?.ratings_avg_stars} />,
+    },
     {
         accessorKey: 'status',
         enableSorting: false,
@@ -113,7 +131,9 @@ const columns: ColumnDef<TCourse>[] = [
 
 export default function CoursesIndex() {
     const source = useHttpDataTable<TCourse>({
-        fetchUrl: CourseController.fetch.url(),
+        fetchUrl:
+            CourseController.fetch.url() +
+            `?include=ratingAvg,lessonCount,moduleCount`,
         filterKey: 'title',
         sortFields,
     });

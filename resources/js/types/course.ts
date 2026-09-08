@@ -13,9 +13,16 @@ export type TCourse = {
     created_at?: string;
     updated_at?: string;
 
+    // Relations
     category?: CategoryOption;
     instructor?: any;
 
+    // Included fields
+    ratings_avg_stars?: number;
+    modules_count?: number;
+    lessons_count?: number;
+
+    // Appended fields
     thumbnail?: string | null;
 };
 

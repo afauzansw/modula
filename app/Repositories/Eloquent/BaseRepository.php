@@ -81,9 +81,9 @@ abstract class BaseRepository implements BaseRepositoryInterface
         }
 
         $query = QueryBuilder::for($base)
-        ->allowedIncludes()
             ->allowedFilters(...(($scope->filters == []) ? $this->allowedFilters : $scope->filters))
-            ->allowedSorts(...(($scope->sorts == []) ? $this->allowedSorts : $scope->sorts));
+            ->allowedSorts(...(($scope->sorts == []) ? $this->allowedSorts : $scope->sorts))
+            ->allowedIncludes(...$scope->includes);
 
         if ($paginate->withPaginate) {
             return $query->paginate($paginate->perPage)->appends(request()->query());

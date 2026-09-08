@@ -7,7 +7,8 @@ export function Rating({
     rating?: number;
     size?: 'sm' | 'default' | 'lg';
 }) {
-    const fillPercent = rating !== undefined ? Math.min(Math.max(rating / 5, 0), 1) * 100 : 0;
+    const fillPercent =
+        rating !== undefined ? Math.min(Math.max(rating / 5, 0), 1) * 100 : 0;
     const STAR_SIZES = {
         sm: 12,
         default: 16,
@@ -19,26 +20,36 @@ export function Rating({
     return (
         <>
             {rating !== undefined && (
-                <div
-                    className="relative"
-                    style={{ width: starSize, height: starSize }}
-                >
-                    <StarIcon
-                        className="absolute inset-0 text-muted-foreground"
-                        size={starSize}
-                    />
-
+                <div className="flex items-center">
                     <div
-                        className="absolute inset-0 overflow-hidden"
-                        style={{ width: `${fillPercent}%` }}
+                        className="relative"
+                        style={{ width: starSize, height: starSize }}
                     >
                         <StarIcon
-                            className="fill-yellow-400 text-yellow-400"
+                            className="absolute inset-0 text-muted-foreground"
                             size={starSize}
                         />
+
+                        <div
+                            className="absolute inset-0 overflow-hidden"
+                            style={{ width: `${fillPercent}%` }}
+                        >
+                            <StarIcon
+                                className="fill-yellow-400 text-yellow-400"
+                                size={starSize}
+                            />
+                        </div>
                     </div>
+                    <span className="ml-1 text-sm font-medium">
+                        {formatRating(rating)}
+                    </span>
                 </div>
             )}
         </>
     );
+}
+
+function formatRating(value: string | number | null): string {
+    if (value === null) return "0.0";
+    return Number(value).toFixed(1);
 }
