@@ -1,7 +1,7 @@
 export type CourseStatus = 'draft' | 'published' | 'archived';
 
 export type TCourse = {
-    id?: number;
+    id: number;
     instructor_id: number;
     category_id: number | null;
     title: string;
@@ -27,7 +27,7 @@ export type TCourse = {
 };
 
 export type CategoryOption = {
-    id?: number;
+    id: number;
     name: string;
     slug: string;
     created_at?: string;

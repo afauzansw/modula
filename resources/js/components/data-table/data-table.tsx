@@ -31,6 +31,7 @@ import type {
     DataTableSource,
     DataTableView,
 } from './types';
+import { DataTableColumnHeader } from './data-table-column-header';
 
 const DEFAULT_VIEWS: DataTableView[] = ['table', 'list', 'grid'];
 
@@ -294,13 +295,12 @@ export function DataTable<TData extends { id: number | string }, TValue>({
                                 <TableRow key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (
                                         <TableHead key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                      header.column.columnDef
-                                                          .header,
-                                                      header.getContext(),
-                                                  )}
+                                            <DataTableColumnHeader
+                                                title={header.column.columnDef.header as string}
+                                                canSort={header.column.getCanSort()}
+                                                sorted={header.column.getIsSorted()}
+                                                onToggleSort={header.column.getToggleSortingHandler()}
+                                            />
                                         </TableHead>
                                     ))}
                                 </TableRow>

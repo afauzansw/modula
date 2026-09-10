@@ -119,7 +119,7 @@ export function useHttpDataTable<TData>({
         }
 
         return inverse;
-    }, [sortFields]);
+    }, []);
 
     const sorting: SortingState = useMemo(() => {
         if (sortParam === '') {

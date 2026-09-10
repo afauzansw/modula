@@ -3,7 +3,6 @@ import type { ColumnDef } from '@tanstack/react-table';
 import CourseController from '@/actions/App/Http/Controllers/Admin/CourseController';
 import {
     DataTable,
-    DataTableColumnHeader,
     useHttpDataTable,
 } from '@/components/data-table';
 import type { DataTableFilterDef } from '@/components/data-table';
@@ -19,19 +18,10 @@ import { InstructorProfileAvatar } from '@/components/ui/profile-avatar';
 import { Rating } from '@/components/ui/rating';
 import { FileText, ListTree } from 'lucide-react';
 
-const sortFields = { title: 'title', price: 'price' };
-
 const columns: ColumnDef<TCourse>[] = [
     {
         accessorKey: 'title',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Title"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Title',
         cell: ({ row }) => (
             <div className="flex items-center gap-2">
                 {row.original.thumbnail ? (
@@ -64,8 +54,7 @@ const columns: ColumnDef<TCourse>[] = [
         ),
     },
     {
-        accessorKey: 'instructor',
-        enableSorting: false,
+        accessorKey: 'instructor.name',
         header: 'Instructor',
         cell: ({ row }) => (
             <InstructorProfileAvatar
@@ -76,8 +65,7 @@ const columns: ColumnDef<TCourse>[] = [
         ),
     },
     {
-        accessorKey: 'category',
-        enableSorting: false,
+        accessorKey: 'category.name',
         header: 'Category',
         cell: ({ row }) => (
             <span className="text-muted-foreground">
@@ -87,14 +75,7 @@ const columns: ColumnDef<TCourse>[] = [
     },
     {
         accessorKey: 'price',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Price"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Price',
         cell: ({ row }) => (
             <CoursePrice
                 is_free={row.original.is_free}
@@ -105,11 +86,11 @@ const columns: ColumnDef<TCourse>[] = [
     {
         accessorKey: 'ratings_avg_stars',
         header: 'Rating',
+        enableSorting: false,
         cell: ({ row }) => <Rating rating={row.original?.ratings_avg_stars} />,
     },
     {
         accessorKey: 'status',
-        enableSorting: false,
         header: 'Status',
         cell: ({ row }) => (
             <Badge
@@ -124,11 +105,8 @@ const columns: ColumnDef<TCourse>[] = [
 
 export default function CoursesIndex() {
     const source = useHttpDataTable<TCourse>({
-        fetchUrl:
-            CourseController.fetch.url() +
-            `?include=ratingAvg,lessonCount,moduleCount`,
+        fetchUrl: CourseController.fetch.url(),
         filterKey: 'title',
-        sortFields,
     });
 
     const { categories } = useCourseCategories();
