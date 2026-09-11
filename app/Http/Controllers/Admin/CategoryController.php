@@ -23,7 +23,8 @@ class CategoryController extends Controller
 
     public function fetch(): JsonResponse
     {
-        return response()->json($this->categories->all());
+        $categories = $this->categories->all();
+        return response()->json($categories);
     }
 
     public function store(CategoryRequest $request): RedirectResponse

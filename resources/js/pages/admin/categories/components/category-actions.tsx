@@ -3,23 +3,23 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import type { CategoryListItem } from '@/types';
 import { CategoryFormDialog } from './category-form-dialog';
+import { Pencil, Trash2 } from 'lucide-react';
 
-/** Edit + delete controls for one category row. */
 export function CategoryActions({ category }: { category: CategoryListItem }) {
     return (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-0.5">
             <CategoryFormDialog
                 category={category}
                 trigger={
-                    <Button variant="outline" size="sm">
-                        Edit
+                    <Button variant="ghost" size="sm">
+                        <Pencil className="h-3 w-3" />
                     </Button>
                 }
             />
             <ConfirmDialog
                 trigger={
-                    <Button variant="destructive" size="sm">
-                        Delete
+                    <Button variant="ghost" size="sm">
+                        <Trash2 className="h-3 w-3 text-destructive" />
                     </Button>
                 }
                 title={`Delete "${category.name}"?`}

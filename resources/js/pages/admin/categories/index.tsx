@@ -14,27 +14,16 @@ import type { CategoryListItem } from '@/types';
 import { CategoryActions } from './components/category-actions';
 import { CategoryFormDialog } from './components/category-form-dialog';
 
-/** Stable reference — maps the `name` column to the backend `sort` field. */
-const sortFields = { name: 'name' };
-
 const columns: ColumnDef<CategoryListItem>[] = [
     {
         accessorKey: 'name',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Name"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Name',
         cell: ({ row }) => (
             <span className="font-medium">{row.original.name}</span>
         ),
     },
     {
         accessorKey: 'slug',
-        enableSorting: false,
         header: 'Slug',
         cell: ({ row }) => (
             <code className="text-xs text-muted-foreground">
@@ -54,7 +43,6 @@ export default function CategoriesIndex() {
     const source = useHttpDataTable<CategoryListItem>({
         fetchUrl: CategoryController.fetch.url(),
         filterKey: 'name',
-        sortFields,
     });
 
     return (
