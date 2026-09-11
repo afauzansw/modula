@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 /**
  * @property int $id
@@ -24,8 +26,14 @@ use Illuminate\Support\Carbon;
     'file_path',
     'issued_at',
 ])]
-class Certificate extends Model
+class Certificate extends Model implements HasMedia
 {
+    use InteractsWithMedia;
+
+    protected $appends = [
+        'image',
+    ];
+    
     /**
      * @return array<string, string>
      */
@@ -34,6 +42,16 @@ class Certificate extends Model
         return [
             'issued_at' => 'datetime',
         ];
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('image')->singleFile();
+    }
+
+    public function getImageAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('image') ?: null;
     }
 
     /**

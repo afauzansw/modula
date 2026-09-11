@@ -11,32 +11,30 @@ import Heading from '@/components/heading';
 import { useCertificateCourses } from '@/hooks/use-certificate-courses';
 import { useCertificateStudents } from '@/hooks/use-certificate-students';
 import { index } from '@/routes/admin/certificates';
-import type { CertificateListItem } from '@/types';
+import type { TCertificate } from '@/types';
 import { formatIssuedAt } from './lib/format';
+import { CourseCell } from '@/components/course/course-cell';
 
 /** Stable reference — maps sortable columns to their backend `sort` field. */
 const sortFields = { issued_at: 'issued_at' };
 
-const columns: ColumnDef<CertificateListItem>[] = [
+const columns: ColumnDef<TCertificate>[] = [
     {
         accessorKey: 'student',
-        enableSorting: false,
         header: 'Student',
         cell: ({ row }) => (
-            <span className="font-medium">{row.original.student}</span>
+            <span className="font-medium">{row.original?.user?.name}</span>
         ),
     },
     {
         accessorKey: 'course',
-        enableSorting: false,
         header: 'Course',
         cell: ({ row }) => (
-            <span className="text-muted-foreground">{row.original.course}</span>
+            <CourseCell course={row.original?.course} subContent="category" />
         ),
     },
     {
         accessorKey: 'certificate_number',
-        enableSorting: false,
         header: 'Certificate Number',
         cell: ({ row }) => (
             <code className="text-xs text-muted-foreground">
@@ -46,14 +44,7 @@ const columns: ColumnDef<CertificateListItem>[] = [
     },
     {
         accessorKey: 'issued_at',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Issued At"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Issued At',
         cell: ({ row }) => (
             <span className="text-muted-foreground">
                 {formatIssuedAt(row.original.issued_at)}
@@ -63,7 +54,7 @@ const columns: ColumnDef<CertificateListItem>[] = [
 ];
 
 export default function CertificatesIndex() {
-    const source = useHttpDataTable<CertificateListItem>({
+    const source = useHttpDataTable<TCertificate>({
         fetchUrl: CertificateController.fetch.url(),
         filterKey: 'certificate_number',
         sortFields,
