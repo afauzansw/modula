@@ -17,6 +17,7 @@ import { CoursePrice } from '@/components/course-card/course-price';
 import { InstructorProfileAvatar } from '@/components/ui/profile-avatar';
 import { Rating } from '@/components/ui/rating';
 import { FileText, ListTree } from 'lucide-react';
+import { dateFormat } from '@/lib/utils';
 
 const columns: ColumnDef<TCourse>[] = [
     {
@@ -100,6 +101,11 @@ const columns: ColumnDef<TCourse>[] = [
                 {row.original.status}
             </Badge>
         ),
+    },
+    {
+        accessorKey: 'created_at',
+        header: 'Created At',
+        cell: ({ row }) => dateFormat(row.original.created_at)
     },
 ];
 
