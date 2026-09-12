@@ -1,5 +1,5 @@
-import type { TCourse } from '@/types';
 import { FileText, ListTree } from 'lucide-react';
+import type { TCourse } from '@/types';
 
 export function CourseCell({
     course,

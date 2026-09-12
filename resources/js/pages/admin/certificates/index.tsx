@@ -3,7 +3,6 @@ import type { ColumnDef } from '@tanstack/react-table';
 import CertificateController from '@/actions/App/Http/Controllers/Admin/CertificateController';
 import {
     DataTable,
-    DataTableColumnHeader,
     useHttpDataTable,
 } from '@/components/data-table';
 import type { DataTableFilterDef } from '@/components/data-table';
@@ -16,8 +15,6 @@ import { formatIssuedAt } from './lib/format';
 import { CourseCell } from '@/components/course/course-cell';
 import { ProfileAvatar } from '@/components/ui/profile-avatar';
 
-/** Stable reference — maps sortable columns to their backend `sort` field. */
-const sortFields = { issued_at: 'issued_at' };
 
 const columns: ColumnDef<TCertificate>[] = [
     {
@@ -62,7 +59,6 @@ export default function CertificatesIndex() {
     const source = useHttpDataTable<TCertificate>({
         fetchUrl: CertificateController.fetch.url(),
         filterKey: 'certificate_number',
-        sortFields,
     });
 
     const { students } = useCertificateStudents();

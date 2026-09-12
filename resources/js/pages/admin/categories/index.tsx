@@ -4,7 +4,6 @@ import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryCon
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
     DataTable,
-    DataTableColumnHeader,
     useHttpDataTable,
 } from '@/components/data-table';
 import Heading from '@/components/heading';
@@ -77,9 +76,8 @@ export default function CategoriesIndex() {
                                     Delete {selectedIds.length} selected
                                 </Button>
                             }
-                            title={`Delete ${selectedIds.length} categor${
-                                selectedIds.length === 1 ? 'y' : 'ies'
-                            }?`}
+                            title={`Delete ${selectedIds.length} categor${selectedIds.length === 1 ? 'y' : 'ies'
+                                }?`}
                             description="Courses in the selected categories become uncategorized. This cannot be undone."
                             form={CategoryController.bulkDestroy.form()}
                             fields={{ ids: selectedIds.map(Number) }}

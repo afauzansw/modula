@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
-import type { TCourse } from '@/types';
 import { statusVariant } from '@/const/course';
 import { CoursePrice } from './course-price';
+import type { TCourse } from '@/types';
 
 export function CourseCard({ course }: { course?: TCourse }) {
     return (

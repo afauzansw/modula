@@ -6,6 +6,7 @@ import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import typescript from 'typescript-eslint';
+import unusedImports from 'eslint-plugin-unused-imports';
 
 const controlStatements = [
     'if',
@@ -51,6 +52,7 @@ export default [
     {
         plugins: {
             import: importPlugin,
+            'unused-imports': unusedImports,
         },
         settings: {
             'import/resolver': {
@@ -63,6 +65,7 @@ export default [
         },
         rules: {
             '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unused-vars': 'off',
             '@typescript-eslint/consistent-type-imports': [
                 'error',
                 {
@@ -88,6 +91,16 @@ export default [
                 'error',
                 'prefer-top-level',
             ],
+            'unused-imports/no-unused-imports': 'error',
+            'unused-imports/no-unused-vars': [
+                'warn',
+                {
+                    vars: 'all',
+                    varsIgnorePattern: '^_',
+                    args: 'after-used',
+                    argsIgnorePattern: '^_',
+                },
+            ],
         },
     },
     {
@@ -95,7 +108,11 @@ export default [
             '@stylistic': stylistic,
         },
         rules: {
-            '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
+            '@stylistic/brace-style': [
+                'error',
+                '1tbs',
+                { allowSingleLine: false },
+            ],
             '@stylistic/padding-line-between-statements': [
                 'error',
                 ...paddingAroundControl,
@@ -123,7 +140,11 @@ export default [
         },
         rules: {
             curly: ['error', 'all'],
-            '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
+            '@stylistic/brace-style': [
+                'error',
+                '1tbs',
+                { allowSingleLine: false },
+            ],
         },
     },
 ];

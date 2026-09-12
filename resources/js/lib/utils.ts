@@ -15,12 +15,17 @@ export function dateFormat(
     date?: string,
     options?: Intl.DateTimeFormatOptions,
 ): string {
-    if (!date) return '';
+    if (!date) {
+        return '';
+    }
 
     const d = new Date(date);
-    return d.toLocaleDateString(undefined, options ?? {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
+    return d.toLocaleDateString(
+        undefined,
+        options ?? {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+        },
+    );
 }
