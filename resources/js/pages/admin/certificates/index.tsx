@@ -14,6 +14,7 @@ import { index } from '@/routes/admin/certificates';
 import type { TCertificate } from '@/types';
 import { formatIssuedAt } from './lib/format';
 import { CourseCell } from '@/components/course/course-cell';
+import { ProfileAvatar } from '@/components/ui/profile-avatar';
 
 /** Stable reference — maps sortable columns to their backend `sort` field. */
 const sortFields = { issued_at: 'issued_at' };
@@ -23,7 +24,11 @@ const columns: ColumnDef<TCertificate>[] = [
         accessorKey: 'student',
         header: 'Student',
         cell: ({ row }) => (
-            <span className="font-medium">{row.original?.user?.name}</span>
+            <ProfileAvatar
+                image={row.original?.user?.avatar}
+                name={row.original?.user?.name}
+                subtitle={row.original?.user?.email}
+            />
         ),
     },
     {

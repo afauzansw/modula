@@ -61,7 +61,7 @@ export function ProfileAvatar({
     name,
     subtitle,
 }: {
-    image: string;
+    image?: string;
     name: string;
     subtitle?: string;
 }) {

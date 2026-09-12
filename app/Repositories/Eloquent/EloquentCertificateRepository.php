@@ -16,7 +16,7 @@ class EloquentCertificateRepository extends BaseRepository implements Certificat
     protected array $allowedSorts = ['issued_at', 'created_at'];
 
     /** @var list<string> */
-    protected array $with = ['user', 'course'];
+    protected array $with = ['user', 'course', 'course.category:id,name'];
 
     public function __construct(Certificate $model)
     {
