@@ -20,28 +20,14 @@ const sortFields = { name: 'name', email: 'email', created_at: 'created_at' };
 const columns: ColumnDef<UserListItem>[] = [
     {
         accessorKey: 'name',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Name"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Name',
         cell: ({ row }) => (
             <span className="font-medium">{row.original.name}</span>
         ),
     },
     {
         accessorKey: 'email',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Email"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Email',
         cell: ({ row }) => (
             <span className="text-muted-foreground">{row.original.email}</span>
         ),
@@ -52,7 +38,7 @@ const columns: ColumnDef<UserListItem>[] = [
         header: 'Status',
         cell: ({ row }) => (
             <Badge
-                variant={row.original.is_blocked ? 'destructive' : 'outline'}
+                variant={row.original.is_blocked ? 'destructive' : 'default'}
             >
                 {row.original.is_blocked ? 'Blocked' : 'Active'}
             </Badge>
@@ -60,14 +46,7 @@ const columns: ColumnDef<UserListItem>[] = [
     },
     {
         accessorKey: 'created_at',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Joined"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Joined',
         cell: ({ row }) => (
             <span className="text-muted-foreground">
                 {row.original.created_at

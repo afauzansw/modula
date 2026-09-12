@@ -3,5 +3,5 @@ export type UserListItem = {
     name: string;
     email: string;
     is_blocked: boolean;
-    created_at: string | null;
+    created_at?: string;
 };
