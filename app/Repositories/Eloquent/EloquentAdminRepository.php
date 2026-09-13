@@ -18,7 +18,7 @@ class EloquentAdminRepository extends BaseRepository implements AdminRepositoryI
     protected array $allowedSorts = ['name', 'email', 'created_at'];
 
     /** @var list<string> */
-    protected array $with = ['permissions'];
+    protected array $with = ['roles'];
 
     public function __construct(Admin $model)
     {

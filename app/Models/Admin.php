@@ -19,7 +19,7 @@ class Admin extends User
     protected static function booted(): void
     {
         static::addGlobalScope('admin', fn ($query) => $query->whereHas(
-            'permissions',
+            'roles.permissions',
             fn ($permissions) => $permissions->whereIn('name', AdminPermission::values()),
         ));
     }

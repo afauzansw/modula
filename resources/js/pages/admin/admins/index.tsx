@@ -16,51 +16,28 @@ import type { AdminUserListItem } from '@/types';
 import { AdminActions } from './components/admin-actions';
 import { AdminFormDialog } from './components/admin-form-dialog';
 
-/** Stable reference — maps sortable columns to their backend `sort` field. */
-const sortFields = { name: 'name', email: 'email' };
 
 const columns: ColumnDef<AdminUserListItem>[] = [
     {
         accessorKey: 'name',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Name"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Name',
         cell: ({ row }) => (
             <span className="font-medium">{row.original.name}</span>
         ),
     },
     {
         accessorKey: 'email',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Email"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Email',
         cell: ({ row }) => (
             <span className="text-muted-foreground">{row.original.email}</span>
         ),
     },
     {
-        accessorKey: 'permissions',
-        enableSorting: false,
-        header: 'Permissions',
-        cell: ({ row }) => {
-            const count = row.original.permissions.length;
-
-            return (
-                <span className="text-muted-foreground">
-                    {count} permission{count === 1 ? '' : 's'}
-                </span>
-            );
-        },
+        accessorKey: 'roles',
+        header: 'Role',
+        cell: ({ row }) => (
+            <span className="text-muted-foreground">{row.original.roles[0]?.name}</span>
+        ),
     },
     {
         id: 'actions',
@@ -74,7 +51,6 @@ export default function AdminsIndex() {
     const source = useHttpDataTable<AdminUserListItem>({
         fetchUrl: AdminUserController.fetch.url(),
         filterKey: 'name',
-        sortFields,
     });
 
     const { permissions } = usePermissionCatalogue();

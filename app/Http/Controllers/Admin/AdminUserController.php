@@ -27,23 +27,7 @@ class AdminUserController extends Controller
     {
         $admins = $this->admins->all();
 
-        $rows = [];
-
-        foreach ($admins->items() as $admin) {
-            if (! $admin instanceof User) {
-                continue;
-            }
-
-            $rows[] = [
-                'id' => $admin->id,
-                'name' => $admin->name,
-                'email' => $admin->email,
-                'permissions' => $admin->permissions->pluck('name')->all(),
-                'created_at' => $admin->created_at?->toIso8601String(),
-            ];
-        }
-
-        return $this->paginatedJson($admins, $rows);
+        return response()->json($admins);
     }
 
     public function store(AdminUserRequest $request): RedirectResponse

@@ -2,6 +2,6 @@ export type AdminUserListItem = {
     id: number;
     name: string;
     email: string;
-    permissions: string[];
+    roles: { name: string }[];
     created_at: string | null;
 };
