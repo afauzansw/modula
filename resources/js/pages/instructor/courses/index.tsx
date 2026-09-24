@@ -13,12 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useInstructorCourseCategories } from '@/hooks/use-instructor-course-categories';
 import { create, index } from '@/routes/instructor/courses';
-import type { CourseStatus, InstructorCourseListItem } from '@/types';
+import type { CourseStatus, TCourse } from '@/types';
 import { CourseActions } from './components/course-actions';
 import { formatPrice } from './lib/format-price';
 
-/** Stable reference — maps sortable columns to their backend `sort` field. */
-const sortFields = { title: 'title', price: 'price' };
 
 const statusVariant: Record<CourseStatus, 'default' | 'secondary' | 'outline'> =
     {
@@ -27,47 +25,31 @@ const statusVariant: Record<CourseStatus, 'default' | 'secondary' | 'outline'> =
         archived: 'secondary',
     };
 
-const columns: ColumnDef<InstructorCourseListItem>[] = [
+const columns: ColumnDef<TCourse>[] = [
     {
         accessorKey: 'title',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Title"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Title',
         cell: ({ row }) => (
             <span className="font-medium">{row.original.title}</span>
         ),
     },
     {
-        accessorKey: 'category',
-        enableSorting: false,
+        accessorKey: 'category_id',
         header: 'Category',
         cell: ({ row }) => (
             <span className="text-muted-foreground">
-                {row.original.category ?? 'Uncategorized'}
+                {row.original.category?.name ?? 'Uncategorized'}
             </span>
         ),
     },
     {
         accessorKey: 'price',
-        header: ({ column }) => (
-            <DataTableColumnHeader
-                title="Price"
-                canSort={column.getCanSort()}
-                sorted={column.getIsSorted()}
-                onToggleSort={column.getToggleSortingHandler()}
-            />
-        ),
+        header: 'Price',
         cell: ({ row }) =>
             formatPrice(row.original.price, row.original.is_free),
     },
     {
         accessorKey: 'status',
-        enableSorting: false,
         header: 'Status',
         cell: ({ row }) => (
             <Badge
@@ -87,10 +69,9 @@ const columns: ColumnDef<InstructorCourseListItem>[] = [
 ];
 
 export default function InstructorCourses() {
-    const source = useHttpDataTable<InstructorCourseListItem>({
+    const source = useHttpDataTable<TCourse>({
         fetchUrl: CourseController.fetch.url(),
         filterKey: 'title',
-        sortFields,
     });
 
     const { categories } = useInstructorCourseCategories();

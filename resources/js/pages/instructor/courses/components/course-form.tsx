@@ -28,113 +28,119 @@ export function CourseForm({ categories, course, form, submitLabel }: Props) {
         <Form
             {...form}
             options={{ preserveScroll: true }}
-            className="max-w-2xl space-y-6"
+            className="space-y-6"
         >
             {({ errors, processing }) => (
                 <>
-                    <div className="grid gap-2">
-                        <Label htmlFor="title">Title</Label>
-                        <Input
-                            id="title"
-                            name="title"
-                            required
-                            autoFocus
-                            defaultValue={course?.title}
-                        />
-                        <InputError message={errors.title} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="category_id">Category</Label>
-                        <select
-                            id="category_id"
-                            name="category_id"
-                            className={control}
-                            defaultValue={course?.category_id ?? ''}
-                        >
-                            <option value="">Uncategorized</option>
-                            {categories.map((category) => (
-                                <option key={category.id} value={category.id}>
-                                    {category.name}
-                                </option>
-                            ))}
-                        </select>
-                        <InputError message={errors.category_id} />
-                    </div>
-
-                    <div className="grid gap-2">
-                        <Label htmlFor="description">Description</Label>
-                        <textarea
-                            id="description"
-                            name="description"
-                            rows={4}
-                            className={control}
-                            defaultValue={course?.description ?? ''}
-                        />
-                        <InputError message={errors.description} />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <Checkbox
-                            id="is_free"
-                            name="is_free"
-                            value="1"
-                            checked={isFree}
-                            onCheckedChange={(value) =>
-                                setIsFree(value === true)
-                            }
-                        />
-                        <Label htmlFor="is_free" className="font-normal">
-                            Free course
-                        </Label>
-                    </div>
-
-                    {!isFree && (
+                    <div className="grid grid-cols-2 gap-6 ">
                         <div className="grid gap-2">
-                            <Label htmlFor="price">Price (IDR)</Label>
+                            <Label htmlFor="title">Title</Label>
                             <Input
-                                id="price"
-                                name="price"
-                                type="number"
-                                min={0}
-                                step={1000}
-                                defaultValue={course?.price || ''}
+                                id="title"
+                                name="title"
+                                required
+                                autoFocus
+                                defaultValue={course?.title}
                             />
-                            <InputError message={errors.price} />
+                            <InputError message={errors.title} />
                         </div>
-                    )}
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="status">Status</Label>
-                        <select
-                            id="status"
-                            name="status"
-                            className={control}
-                            defaultValue={course?.status ?? 'draft'}
-                        >
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                            <option value="archived">Archived</option>
-                        </select>
-                        <InputError message={errors.status} />
-                    </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="category_id">Category</Label>
+                            <select
+                                id="category_id"
+                                name="category_id"
+                                className={control}
+                                defaultValue={course?.category_id ?? ''}
+                            >
+                                <option value="">Uncategorized</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={errors.category_id} />
+                        </div>
 
-                    <div className="grid gap-2">
-                        <Label htmlFor="thumbnail">Thumbnail</Label>
-                        {course?.thumbnail && (
-                            <img
-                                src={course.thumbnail}
-                                alt=""
-                                className="aspect-video w-48 rounded object-cover"
+
+
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id="is_free"
+                                name="is_free"
+                                value="1"
+                                checked={isFree}
+                                onCheckedChange={(value) =>
+                                    setIsFree(value === true)
+                                }
                             />
+                            <Label htmlFor="is_free" className="font-normal">
+                                Free course
+                            </Label>
+                        </div>
+
+                        {!isFree && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="price">Price (IDR)</Label>
+                                <Input
+                                    id="price"
+                                    name="price"
+                                    type="number"
+                                    min={0}
+                                    step={1000}
+                                    defaultValue={course?.price || ''}
+                                />
+                                <InputError message={errors.price} />
+                            </div>
                         )}
-                        <Input
-                            id="thumbnail"
-                            name="thumbnail"
-                            type="file"
-                            accept="image/*"
-                        />
-                        <InputError message={errors.thumbnail} />
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="status">Status</Label>
+                            <select
+                                id="status"
+                                name="status"
+                                className={control}
+                                defaultValue={course?.status ?? 'draft'}
+                            >
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                            <InputError message={errors.status} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="thumbnail">Thumbnail</Label>
+                            {course?.thumbnail && (
+                                <img
+                                    src={course.thumbnail}
+                                    alt=""
+                                    className="aspect-video w-48 rounded object-cover"
+                                />
+                            )}
+                            <Input
+                                id="thumbnail"
+                                name="thumbnail"
+                                type="file"
+                                accept="image/*"
+                            />
+                            <InputError message={errors.thumbnail} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="description">Description</Label>
+                            <textarea
+                                id="description"
+                                name="description"
+                                rows={4}
+                                className={control}
+                                defaultValue={course?.description ?? ''}
+                            />
+                            <InputError message={errors.description} />
+                        </div>
+
+
                     </div>
 
                     <div className="flex gap-2">
@@ -144,8 +150,7 @@ export function CourseForm({ categories, course, form, submitLabel }: Props) {
                         <Button variant="secondary" asChild>
                             <Link href={index()}>Cancel</Link>
                         </Button>
-                    </div>
-                </>
+                    </div></>
             )}
         </Form>
     );

@@ -30,25 +30,7 @@ class CourseController extends Controller
     {
         $courses = $this->courses->all();
 
-        $rows = [];
-
-        foreach ($courses->items() as $course) {
-            if (! $course instanceof InstructorCourse) {
-                continue;
-            }
-
-            $rows[] = [
-                'id' => $course->id,
-                'title' => $course->title,
-                'category' => $course->category?->name,
-                'price' => $course->price,
-                'is_free' => $course->is_free,
-                'status' => $course->status,
-                'thumbnail' => $course->getFirstMediaUrl('thumbnail') ?: null,
-            ];
-        }
-
-        return $this->paginatedJson($courses, $rows);
+        return response()->json($courses);
     }
 
     public function categories(): JsonResponse

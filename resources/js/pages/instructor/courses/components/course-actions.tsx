@@ -3,13 +3,13 @@ import CourseController from '@/actions/App/Http/Controllers/Instructor/CourseCo
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { edit } from '@/routes/instructor/courses';
-import type { InstructorCourseListItem } from '@/types';
+import type { InstructorCourseListItem, TCourse } from '@/types';
 
 /** Edit link + delete confirm for one course row. */
 export function CourseActions({
     course,
 }: {
-    course: InstructorCourseListItem;
+    course: TCourse;
 }) {
     return (
         <div className="flex justify-end gap-2">
