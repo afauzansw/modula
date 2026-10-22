@@ -26,4 +26,11 @@ class CertificateController extends Controller
 
         return Inertia::render('student/certificates', ['certificates' => $certificates]);
     }
+
+    public function fetch(Request $request)
+    {
+        $certificates = $this->certificates->forStudent($request->user()->id);
+
+        return response()->json($certificates);
+    }
 }
